@@ -1,0 +1,31 @@
+server:
+  port: 7000
+  tomcat:
+    accesslog:
+      enabled: true
+
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: false
+
+---
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5439/db
+    username: mindsit_dev
+    password: mindsit_dev
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        use_jdbc_metadata_defaults: false
+
+digitalactivismapp:
+  self:
+    url: localhost:8000

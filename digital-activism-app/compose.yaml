@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: 'postgres:latest'
+    ports:
+      - "5440:5432"
+
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_PASSWORD: mindsit_dev
+      POSTGRES_USER: mindsit_dev
+      PGDATA: /mnt/data
+    volumes:
+      - ./db_vol_docker/_data:/mnt/data

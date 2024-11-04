@@ -3,6 +3,8 @@ server:
   tomcat:
     accesslog:
       enabled: true
+  servlet:
+    context-path: /api
 
 spring:
   jackson:
@@ -23,9 +25,12 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         use_jdbc_metadata_defaults: false
 
-digitalactivismapp:
-  self:
-    url: localhost:8000
+spring.mail.host: smtp.gmail.com
+spring.mail.port: 587
+spring.mail.username: "${custom.email.username}"
+spring.mail.password: "${custom.email.password}"
+
+spring.servlet.multipart.max-file-size: 100000000MB
+spring.servlet.multipart.max-request-size: 100000000MB

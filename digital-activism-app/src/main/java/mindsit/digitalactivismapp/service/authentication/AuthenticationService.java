@@ -1,14 +1,14 @@
 package mindsit.digitalactivismapp.service.authentication;
 
+import jakarta.mail.MessagingException;
 import mindsit.digitalactivismapp.model.member.Member;
+import mindsit.digitalactivismapp.modelDTO.authentication.*;
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
-import mindsit.digitalactivismapp.modelDTO.authentication.LoginRequest;
-import mindsit.digitalactivismapp.modelDTO.authentication.MemberDTOOptional;
-import mindsit.digitalactivismapp.modelDTO.authentication.RegisterRequest;
 import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.service.JWTService;
 import mindsit.digitalactivismapp.service.member.MemberDTOMapper;
 import mindsit.digitalactivismapp.service.member.MemberDetailsService;
+import mindsit.digitalactivismapp.service.misc.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -23,7 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import static mindsit.digitalactivismapp.config.Functions.getToken;
+import static mindsit.digitalactivismapp.custom.Functions.generateRandomNumber;
+import static mindsit.digitalactivismapp.custom.Functions.getToken;
 import static mindsit.digitalactivismapp.config.SecurityConfig.PASSWORD_ROUNDS;
 
 @Service
@@ -32,6 +33,7 @@ public class AuthenticationService {
     private final static int MIN_PASSWORD_LENGTH = 12;
     private final MemberRepository memberRepository;
     private final AuthenticationManager authManager;
+    private final EmailService emailService;
     private final JWTService jwtService;
     private final ApplicationContext context;
     private final MemberDTOMapper memberDTOMapper;
@@ -40,11 +42,12 @@ public class AuthenticationService {
 
     @Autowired
     public AuthenticationService(MemberRepository memberRepository,
-                         AuthenticationManager authManager,
-                         JWTService jwtService,
-                         ApplicationContext context, MemberDTOMapper memberDTOMapper, RegisterMapper registerMapper) {
+                                 AuthenticationManager authManager, EmailService emailService,
+                                 JWTService jwtService,
+                                 ApplicationContext context, MemberDTOMapper memberDTOMapper, RegisterMapper registerMapper) {
         this.memberRepository = memberRepository;
         this.authManager = authManager;
+        this.emailService = emailService;
         this.jwtService = jwtService;
         this.context = context;
         this.memberDTOMapper = memberDTOMapper;
@@ -79,21 +82,22 @@ public class AuthenticationService {
         }
     }
 
-    public MemberDTOOptional register(RegisterRequest registerRequest) {
+    @Transactional
+    public RegisterResponse register(RegisterRequest registerRequest) {
         Member member = registerMapper.apply(registerRequest);
-        MemberDTOOptional memberDTOOptional = new MemberDTOOptional();
+        RegisterResponse registerResponse = new RegisterResponse();
 
-        checkEmail(memberDTOOptional, member);
-        checkUsername(memberDTOOptional, member);
-        hashPassword(memberDTOOptional, member);
+        checkEmail(registerResponse, member);
+        checkUsername(registerResponse, member);
+        hashPassword(registerResponse, member);
 
-        if(memberDTOOptional.getErrors().isEmpty()) {
+        if(registerResponse.getErrorLists().isEmpty()) {
             updateMemberToken(member);
             memberRepository.save(member);
-            memberDTOOptional.setMemberDTO(memberDTOMapper.apply(member));
+            registerResponse.setMemberDTO(memberDTOMapper.apply(member));
         }
 
-        return memberDTOOptional;
+        return registerResponse;
     }
 
     private void updateMemberToken(Member member) {
@@ -102,38 +106,47 @@ public class AuthenticationService {
         memberRepository.updateTokenByEmail(member.getEmail(), member.getToken());
     }
 
-    private void checkEmail(MemberDTOOptional memberDTOOptional, Member member) {
+    private void checkEmail(RegisterResponse registerResponse, Member member) {
+        ErrorList errorList = new ErrorList("Email");
+        registerResponse.getErrorLists().add(errorList);
+
         if(member.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
             member.setEmail(member.getEmail().toLowerCase());
         } else {
-            memberDTOOptional.getErrors().add("Invalid email.");
+            errorList.getErrors().add("Invalid email.");
             return;
         }
 
         if(findMemberByEmail(member.getEmail()) != null) {
-            memberDTOOptional.getErrors().add("Email already in use.");
+            errorList.getErrors().add("Email already in use.");
         }
     }
 
-    private void checkUsername(MemberDTOOptional memberDTOOptional, Member member) {
+    private void checkUsername(RegisterResponse registerResponse, Member member) {
+        ErrorList errorList = new ErrorList("Username");
+        registerResponse.getErrorLists().add(errorList);
+
         if(member.getUsername().matches("^[a-zA-Z0-9]*$")) {
             member.setUsername(member.getUsername().toLowerCase());
         } else {
-            memberDTOOptional.getErrors().add("Username must contain only letters and numbers.");
+            errorList.getErrors().add("Username must contain only letters and numbers.");
             return;
         }
 
 
         if(member.getUsername().length() < 3) {
-            memberDTOOptional.getErrors().add("Username must be at least 3 characters long.");
+            errorList.getErrors().add("Username must be at least 3 characters long.");
         }
     }
 
-    public void hashPassword(MemberDTOOptional memberDTOOptional, Member member) {
+    public void hashPassword(RegisterResponse registerResponse, Member member) {
+        ErrorList errorList = new ErrorList("Password");
+        registerResponse.getErrorLists().add(errorList);
+
         if (member.getPassword().matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{" + MIN_PASSWORD_LENGTH + ",}$")) {
             member.setPassword(encoder.encode(member.getPassword()));
         } else {
-            memberDTOOptional.getErrors().add("Password cannot be empty, must contain at least " +
+            errorList.getErrors().add("Password cannot be empty, must contain at least " +
                     MIN_PASSWORD_LENGTH +
                     " characters, 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.");
         }
@@ -153,8 +166,28 @@ public class AuthenticationService {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
-    public ResponseEntity<HttpStatus> sendVerificationEmail(String authHeader) {
-        return ResponseEntity.ok(HttpStatus.ACCEPTED);
+    public ResponseEntity<EmailVerificationResponse> sendVerificationEmail(String email) {
+        int verificationCode = generateRandomNumber(5);
+        String verificationCodeHash = encoder.encode(String.valueOf(verificationCode));
+        EmailVerificationContainer emailVerificationContainer = new EmailVerificationContainer(
+                email,
+                "Verification Email",
+                "Here is your verification code: " + verificationCode,
+                true,
+                "email-verification-template",
+                verificationCode);
+
+        EmailVerificationResponse emailVerificationResponse = new EmailVerificationResponse();
+
+        try {
+            emailService.sendVerificationEmail(emailVerificationContainer);
+            emailVerificationResponse.setVerificationCodeHash(verificationCodeHash);
+            return ResponseEntity.ok(emailVerificationResponse);
+        } catch (MessagingException e) {
+            System.out.println(e.getMessage());
+            emailVerificationResponse.getErrors().add("Failed to send verification email.");
+            return ResponseEntity.ok(emailVerificationResponse);
+        }
     }
 
 }

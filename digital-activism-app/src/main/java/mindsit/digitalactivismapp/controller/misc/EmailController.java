@@ -1,7 +1,7 @@
 package mindsit.digitalactivismapp.controller.misc;
 
 import jakarta.mail.MessagingException;
-import mindsit.digitalactivismapp.model.misc.Email;
+import mindsit.digitalactivismapp.modelDTO.authentication.EmailVerificationContainer;
 import mindsit.digitalactivismapp.service.misc.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,9 +18,9 @@ public class EmailController {
     }
 
     @PostMapping("/public/send-email")
-    public boolean sendEmail(@RequestBody Email email) {
+    public boolean sendEmail(@RequestBody EmailVerificationContainer emailVerificationContainer) {
         try {
-            emailService.sendEmail(email);
+            emailService.sendEmail(emailVerificationContainer);
             return true;
         } catch (MessagingException e) {
             System.out.println(e.getMessage());

@@ -46,7 +46,7 @@ public class Member implements MyEntity {
     @Column(name = "pfp_name")
     private String pfpName;
 
-    @Column(name = "token")
+    @Column(name = "token", columnDefinition = "TEXT")
     private String token;
 
     public Member(String username, String email, String password) {

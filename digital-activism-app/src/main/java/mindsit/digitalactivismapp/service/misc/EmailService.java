@@ -2,7 +2,7 @@ package mindsit.digitalactivismapp.service.misc;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import mindsit.digitalactivismapp.model.misc.Email;
+import mindsit.digitalactivismapp.modelDTO.authentication.EmailVerificationContainer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -23,22 +23,43 @@ public class EmailService {
         this.templateEngine = templateEngine;
     }
 
-    public void sendEmail(Email email) throws MessagingException {
+    public void sendEmail(EmailVerificationContainer emailVerificationContainer) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
         mimeMessageHelper.setFrom(emailUsername);
-        mimeMessageHelper.setTo(email.getTo());
-        mimeMessageHelper.setSubject(email.getSubject());
+        mimeMessageHelper.setTo(emailVerificationContainer.getTo());
+        mimeMessageHelper.setSubject(emailVerificationContainer.getSubject());
 
-        if (email.isHTML()) {
+        if (emailVerificationContainer.isHTML()) {
             Context context = new Context();
-            context.setVariable("message", email.getBody());
-            String processedString = templateEngine.process(email.getTemplate(), context);
+            context.setVariable("message", emailVerificationContainer.getBody());
+            String processedString = templateEngine.process(emailVerificationContainer.getTemplate(), context);
 
             mimeMessageHelper.setText(processedString, true);
         } else {
-            mimeMessageHelper.setText(email.getBody(), false);
+            mimeMessageHelper.setText(emailVerificationContainer.getBody(), false);
+        }
+
+        mailSender.send(mimeMessage);
+    }
+
+    public void sendVerificationEmail(EmailVerificationContainer emailVerificationContainer) throws MessagingException {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "UTF-8");
+
+        mimeMessageHelper.setFrom(emailUsername);
+        mimeMessageHelper.setTo(emailVerificationContainer.getTo());
+        mimeMessageHelper.setSubject(emailVerificationContainer.getSubject());
+
+        if (emailVerificationContainer.isHTML()) {
+            Context context = new Context();
+            context.setVariable("verificationCode", emailVerificationContainer.getVerificationCode());
+            String processedString = templateEngine.process(emailVerificationContainer.getTemplate(), context);
+
+            mimeMessageHelper.setText(processedString, true);
+        } else {
+            mimeMessageHelper.setText(emailVerificationContainer.getBody(), false);
         }
 
         mailSender.send(mimeMessage);

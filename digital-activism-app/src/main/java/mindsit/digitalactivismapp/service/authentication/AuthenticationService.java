@@ -159,34 +159,46 @@ public class AuthenticationService {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
-    public ResponseEntity<HttpStatus> verifyEmail(String authHeader) {
-        return getToken(authHeader).map(token ->
-                        findMemberByToken(token).map(memberDto -> ResponseEntity.ok(HttpStatus.ACCEPTED))
-                                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    @Transactional
+    public ResponseEntity<VerifyEmailResponse> verifyEmail(VerifyEmailRequest verifyEmailRequest) {
+        VerifyEmailResponse verifyEmailResponse = new VerifyEmailResponse();
+        Member member = findMemberByEmail(verifyEmailRequest.email());
+
+        if (member == null) {
+            verifyEmailResponse.getErrors().add("User with this email not found.");
+        }
+
+        if (encoder.matches(verifyEmailRequest.verificationCode(), verifyEmailRequest.verificationCodeHash())) {
+            memberRepository.updateEmailVerifiedByEmail(verifyEmailRequest.email());
+            verifyEmailResponse.setSuccess(true);
+        } else {
+            verifyEmailResponse.getErrors().add("Invalid verification code.");
+        }
+        return ResponseEntity.ok(verifyEmailResponse);
     }
 
-    public ResponseEntity<EmailVerificationResponse> sendVerificationEmail(String email) {
+    public ResponseEntity<SendEmailVerificationResponse> sendEmailVerification(SendEmailVerificationRequest sendEmailVerificationRequest) {
         int verificationCode = generateRandomNumber(5);
+        System.out.println("Verification code for " + sendEmailVerificationRequest.email() +  ": " + verificationCode);
         String verificationCodeHash = encoder.encode(String.valueOf(verificationCode));
         EmailVerificationContainer emailVerificationContainer = new EmailVerificationContainer(
-                email,
+                sendEmailVerificationRequest.email(),
                 "Verification Email",
                 "Here is your verification code: " + verificationCode,
                 true,
                 "email-verification-template",
                 verificationCode);
 
-        EmailVerificationResponse emailVerificationResponse = new EmailVerificationResponse();
+        SendEmailVerificationResponse sendEmailVerificationResponse = new SendEmailVerificationResponse();
 
         try {
             emailService.sendVerificationEmail(emailVerificationContainer);
-            emailVerificationResponse.setVerificationCodeHash(verificationCodeHash);
-            return ResponseEntity.ok(emailVerificationResponse);
+            sendEmailVerificationResponse.setVerificationCodeHash(verificationCodeHash);
+            return ResponseEntity.ok(sendEmailVerificationResponse);
         } catch (MessagingException e) {
             System.out.println(e.getMessage());
-            emailVerificationResponse.getErrors().add("Failed to send verification email.");
-            return ResponseEntity.ok(emailVerificationResponse);
+            sendEmailVerificationResponse.getErrors().add("Failed to send verification email.");
+            return ResponseEntity.ok(sendEmailVerificationResponse);
         }
     }
 

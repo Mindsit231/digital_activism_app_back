@@ -1,10 +1,7 @@
 package mindsit.digitalactivismapp.controller;
 
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
-import mindsit.digitalactivismapp.modelDTO.authentication.EmailVerificationResponse;
-import mindsit.digitalactivismapp.modelDTO.authentication.LoginRequest;
-import mindsit.digitalactivismapp.modelDTO.authentication.RegisterResponse;
-import mindsit.digitalactivismapp.modelDTO.authentication.RegisterRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.*;
 import mindsit.digitalactivismapp.service.authentication.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,14 +32,14 @@ public class AuthenticationController {
         return authenticationService.loginByToken(authHeader);
     }
 
-    @PostMapping("/authenticated/verify-email")
-    public ResponseEntity<HttpStatus> verifyEmail(@RequestHeader(AUTHORIZATION_HEADER) String authHeader) {
-        return authenticationService.verifyEmail(authHeader);
+    @PostMapping("/authenticated/send-verification-email")
+    public ResponseEntity<SendEmailVerificationResponse> sendEmailVerification(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
+                                                                               @RequestBody SendEmailVerificationRequest sendEmailVerificationRequest) {
+        return authenticationService.sendEmailVerification(sendEmailVerificationRequest);
     }
 
-    @PostMapping("/authenticated/send-verification-email")
-    public ResponseEntity<EmailVerificationResponse> sendVerificationEmail(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-                                                                           @RequestParam(EMAIL_PARAM) String email) {
-        return authenticationService.sendVerificationEmail(email);
+    @PostMapping("/authenticated/verify-email")
+    public ResponseEntity<VerifyEmailResponse> verifyEmail(@RequestBody VerifyEmailRequest verifyEmailRequest) {
+        return authenticationService.verifyEmail(verifyEmailRequest);
     }
 }

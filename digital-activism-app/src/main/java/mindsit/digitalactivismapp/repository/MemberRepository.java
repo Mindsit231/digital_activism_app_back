@@ -30,6 +30,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Integer updatePfpNameByEmail(@Param("email") String email, @Param("pfpImgPath") String pfpImgPath);
 
     @Modifying
+    @Query("Update Member c set c.emailVerified = true WHERE c.email = :email")
+    Integer updateEmailVerifiedByEmail(@Param("email") String email);
+
+    @Modifying
     @Query("DELETE FROM Member p WHERE p.id = :id")
     Integer deleteEntityById(Long id);
 

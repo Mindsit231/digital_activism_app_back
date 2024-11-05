@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EmailVerificationResponse {
+public class SendEmailVerificationResponse {
     private String verificationCodeHash;
     private List<String> errors = new ArrayList<>();
 }

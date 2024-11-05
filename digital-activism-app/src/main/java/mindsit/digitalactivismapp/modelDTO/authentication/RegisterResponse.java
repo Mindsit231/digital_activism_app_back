@@ -14,4 +14,17 @@ import java.util.List;
 public class RegisterResponse {
     private MemberDTO memberDTO;
     private List<ErrorList> errorLists = new ArrayList<>();
+
+    public boolean hasNoErrors() {
+        boolean hasNoErrors = true;
+
+        for (ErrorList errorList : errorLists) {
+            if (!errorList.getErrors().isEmpty()) {
+                hasNoErrors = false;
+                break;
+            }
+        }
+
+        return hasNoErrors;
+    }
 }

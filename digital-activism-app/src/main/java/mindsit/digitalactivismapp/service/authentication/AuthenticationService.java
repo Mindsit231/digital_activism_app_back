@@ -91,7 +91,7 @@ public class AuthenticationService {
         checkUsername(registerResponse, member);
         hashPassword(registerResponse, member);
 
-        if(registerResponse.getErrorLists().isEmpty()) {
+        if(registerResponse.hasNoErrors()) {
             updateMemberToken(member);
             memberRepository.save(member);
             registerResponse.setMemberDTO(memberDTOMapper.apply(member));

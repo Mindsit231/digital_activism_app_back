@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.service.member;
+package mindsit.digitalactivismapp.mapper.member;
 
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
@@ -14,6 +14,7 @@ public class MemberDTOMapper implements Function<Member, MemberDTO> {
                 member.getId(),
                 member.getUsername(),
                 member.getEmail(),
+                member.isEmailVerified(),
                 member.getRole(),
                 member.getCreationDate(),
                 member.getPfpName(),

@@ -1,12 +1,13 @@
 package mindsit.digitalactivismapp.service.authentication;
 
 import jakarta.mail.MessagingException;
+import mindsit.digitalactivismapp.mapper.member.RegisterMapper;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.modelDTO.authentication.*;
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
 import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.service.JWTService;
-import mindsit.digitalactivismapp.service.member.MemberDTOMapper;
+import mindsit.digitalactivismapp.mapper.member.MemberDTOMapper;
 import mindsit.digitalactivismapp.service.member.MemberDetailsService;
 import mindsit.digitalactivismapp.service.misc.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,7 +103,8 @@ public class AuthenticationService {
 
     private void updateMemberToken(Member member) {
         System.out.println("Token is null or invalid, generating new token for: " + member.getEmail());
-        member.setToken(jwtService.generateToken(member));
+        String token = jwtService.generateToken(member);
+        member.setToken(token);
         memberRepository.updateTokenByEmail(member.getEmail(), member.getToken());
     }
 
@@ -152,9 +154,13 @@ public class AuthenticationService {
         }
     }
 
+    @Transactional
     public ResponseEntity<MemberDTO> loginByToken(String authHeader) {
         return getToken(authHeader).map(token ->
-                        findMemberByToken(token).map(memberDto -> ResponseEntity.ok(memberDTOMapper.apply(memberDto)))
+                        findMemberByToken(token).map(member -> {
+                                    updateMemberToken(member);
+                                    return ResponseEntity.ok(memberDTOMapper.apply(member));
+                                })
                                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }

@@ -9,10 +9,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Service
@@ -33,9 +34,11 @@ public class JWTService {
 
     public String generateToken(Member foundMember) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("email", foundMember.getEmail());
         claims.put("username", foundMember.getUsername());
+        claims.put("email", foundMember.getEmail());
         claims.put("role", foundMember.getRole());
+        claims.put("creationDate", foundMember.getCreationDate());
+        claims.put("pfpName", foundMember.getPfpName());
 
         return Jwts.builder()
                 .claims()
@@ -62,7 +65,7 @@ public class JWTService {
     }
 
     private <T> Optional<T> extractClaim(String token, Function<Claims, T> claimResolver) {
-        if(extractAllClaims(token).isEmpty()) {
+        if (extractAllClaims(token).isEmpty()) {
             return Optional.empty();
         } else {
             final Claims claims = extractAllClaims(token).get();

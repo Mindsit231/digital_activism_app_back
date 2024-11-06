@@ -8,6 +8,7 @@ public record MemberDTO(
         Long id,
         String username,
         String email,
+        Boolean emailVerified,
         Role role,
         Date creationDate,
         String pfpName,

@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.service.authentication;
+package mindsit.digitalactivismapp.mapper.member;
 
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.modelDTO.authentication.RegisterRequest;

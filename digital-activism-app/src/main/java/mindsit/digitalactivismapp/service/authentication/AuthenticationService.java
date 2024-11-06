@@ -70,13 +70,15 @@ public class AuthenticationService {
 
         if (authentication.isAuthenticated()) {
             Member foundMember = memberRepository.findByEmail(loginRequest.email());
-            UserDetails userDetails = context.getBean(MemberDetailsService.class).loadUserByUsername(loginRequest.email());
-
-            if (foundMember.getToken() == null ||
-                    foundMember.getToken().isEmpty() ||
-                    !jwtService.validateToken(foundMember.getToken(), userDetails)) {
-                updateMemberToken(foundMember);
-            }
+            // force token update on every login
+            updateMemberToken(foundMember);
+//            UserDetails userDetails = context.getBean(MemberDetailsService.class).loadUserByUsername(loginRequest.email());
+//
+//            if (foundMember.getToken() == null ||
+//                    foundMember.getToken().isEmpty() ||
+//                    !jwtService.validateToken(foundMember.getToken(), userDetails)) {
+//                updateMemberToken(foundMember);
+//            }
             return ResponseEntity.ok(memberDTOMapper.apply(foundMember));
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -93,19 +95,19 @@ public class AuthenticationService {
         hashPassword(registerResponse, member);
 
         if(registerResponse.hasNoErrors()) {
-            updateMemberToken(member);
+            registerResponse.setToken(updateMemberToken(member));
             memberRepository.save(member);
-            registerResponse.setMemberDTO(memberDTOMapper.apply(member));
         }
 
         return registerResponse;
     }
 
-    private void updateMemberToken(Member member) {
+    private String updateMemberToken(Member member) {
         System.out.println("Token is null or invalid, generating new token for: " + member.getEmail());
         String token = jwtService.generateToken(member);
         member.setToken(token);
         memberRepository.updateTokenByEmail(member.getEmail(), member.getToken());
+        return token;
     }
 
     private void checkEmail(RegisterResponse registerResponse, Member member) {
@@ -157,10 +159,7 @@ public class AuthenticationService {
     @Transactional
     public ResponseEntity<MemberDTO> loginByToken(String authHeader) {
         return getToken(authHeader).map(token ->
-                        findMemberByToken(token).map(member -> {
-                                    updateMemberToken(member);
-                                    return ResponseEntity.ok(memberDTOMapper.apply(member));
-                                })
+                        findMemberByToken(token).map(member -> ResponseEntity.ok(memberDTOMapper.apply(member)))
                                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }

@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mindsit.digitalactivismapp.service.JWTService;
 import mindsit.digitalactivismapp.service.member.MemberDetailsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +26,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
     private final ApplicationContext context;
+    private static final Logger logger = LoggerFactory.getLogger(JWTFilter.class);
 
     public JWTFilter(JWTService jwtService, ApplicationContext context) {
         this.jwtService = jwtService;
@@ -52,6 +55,9 @@ public class JWTFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                logger.info("Token validated: {}", token);
+            } else {
+                logger.info("Invalid token: {}", token);
             }
         }
 

@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.modelDTO.authentication;
+package mindsit.digitalactivismapp.modelDTO.authentication.errorList;
 
 import lombok.Getter;
 import lombok.Setter;

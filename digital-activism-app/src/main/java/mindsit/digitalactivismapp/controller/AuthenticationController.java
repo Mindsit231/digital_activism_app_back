@@ -1,16 +1,24 @@
 package mindsit.digitalactivismapp.controller;
 
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
-import mindsit.digitalactivismapp.modelDTO.authentication.*;
+import mindsit.digitalactivismapp.modelDTO.authentication.login.LoginRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.RecoverPasswordRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.RecoverPasswordResponse;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordReset.ResetPasswordRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordReset.ResetPasswordResponse;
+import mindsit.digitalactivismapp.modelDTO.authentication.regsiter.RegisterRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.regsiter.RegisterResponse;
+import mindsit.digitalactivismapp.modelDTO.authentication.verifyEmail.SendEmailVerificationRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.verifyEmail.SendEmailVerificationResponse;
+import mindsit.digitalactivismapp.modelDTO.authentication.verifyEmail.VerifyEmailRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.verifyEmail.VerifyEmailResponse;
 import mindsit.digitalactivismapp.service.authentication.AuthenticationService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class AuthenticationController {
     private final static String AUTHORIZATION_HEADER = "Authorization";
-    private final static String EMAIL_PARAM = "Email";
     private final AuthenticationService authenticationService;
 
     public AuthenticationController(AuthenticationService authenticationService) {
@@ -32,6 +40,11 @@ public class AuthenticationController {
         return authenticationService.loginByToken(authHeader);
     }
 
+    @PostMapping("authenticated/verify-token")
+    public ResponseEntity<Boolean> verifyToken(@RequestHeader(AUTHORIZATION_HEADER) String authHeader) {
+        return authenticationService.verifyToken(authHeader);
+    }
+
     @PostMapping("/authenticated/send-verification-email")
     public ResponseEntity<SendEmailVerificationResponse> sendEmailVerification(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
                                                                                @RequestBody SendEmailVerificationRequest sendEmailVerificationRequest) {
@@ -41,5 +54,16 @@ public class AuthenticationController {
     @PostMapping("/authenticated/verify-email")
     public ResponseEntity<VerifyEmailResponse> verifyEmail(@RequestBody VerifyEmailRequest verifyEmailRequest) {
         return authenticationService.verifyEmail(verifyEmailRequest);
+    }
+
+    @PostMapping("/public/recover-password")
+    public ResponseEntity<RecoverPasswordResponse> recoverPassword(@RequestBody RecoverPasswordRequest recoverPasswordRequest) {
+        return authenticationService.recoverPassword(recoverPasswordRequest);
+    }
+
+    @PostMapping("/authenticated/reset-password")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
+                                                               @RequestBody ResetPasswordRequest recoverPasswordRequest) {
+        return authenticationService.resetPassword(recoverPasswordRequest, authHeader);
     }
 }

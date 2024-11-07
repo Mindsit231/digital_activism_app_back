@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.modelDTO.authentication;
+package mindsit.digitalactivismapp.modelDTO.authentication.login;
 
 public record LoginRequest(
         String email,

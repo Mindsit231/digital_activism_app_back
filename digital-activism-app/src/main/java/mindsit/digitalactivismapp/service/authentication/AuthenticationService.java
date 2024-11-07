@@ -1,15 +1,26 @@
 package mindsit.digitalactivismapp.service.authentication;
 
 import jakarta.mail.MessagingException;
+import mindsit.digitalactivismapp.mapper.member.MemberDTOMapper;
 import mindsit.digitalactivismapp.mapper.member.RegisterMapper;
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.modelDTO.authentication.*;
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
+import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
+import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorListsImpl;
+import mindsit.digitalactivismapp.modelDTO.authentication.login.LoginRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.PasswordRecoveryContainer;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.RecoverPasswordRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.RecoverPasswordResponse;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordReset.ResetPasswordRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.passwordReset.ResetPasswordResponse;
+import mindsit.digitalactivismapp.modelDTO.authentication.regsiter.RegisterRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.regsiter.RegisterResponse;
+import mindsit.digitalactivismapp.modelDTO.authentication.verifyEmail.*;
 import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.service.JWTService;
-import mindsit.digitalactivismapp.mapper.member.MemberDTOMapper;
-import mindsit.digitalactivismapp.service.member.MemberDetailsService;
 import mindsit.digitalactivismapp.service.misc.EmailService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -17,21 +28,24 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.Optional;
 
+import static mindsit.digitalactivismapp.config.SecurityConfig.PASSWORD_ROUNDS;
 import static mindsit.digitalactivismapp.custom.Functions.generateRandomNumber;
 import static mindsit.digitalactivismapp.custom.Functions.getToken;
-import static mindsit.digitalactivismapp.config.SecurityConfig.PASSWORD_ROUNDS;
+import static mindsit.digitalactivismapp.service.authentication.TempDataService.getVerificationCodeKey;
 
 @Service
 public class AuthenticationService {
 
     private final static int MIN_PASSWORD_LENGTH = 12;
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
     private final MemberRepository memberRepository;
     private final AuthenticationManager authManager;
     private final EmailService emailService;
@@ -39,13 +53,15 @@ public class AuthenticationService {
     private final ApplicationContext context;
     private final MemberDTOMapper memberDTOMapper;
     private final RegisterMapper registerMapper;
+    private final TempDataService tempDataService;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(PASSWORD_ROUNDS);
 
     @Autowired
     public AuthenticationService(MemberRepository memberRepository,
                                  AuthenticationManager authManager, EmailService emailService,
                                  JWTService jwtService,
-                                 ApplicationContext context, MemberDTOMapper memberDTOMapper, RegisterMapper registerMapper) {
+                                 ApplicationContext context, MemberDTOMapper memberDTOMapper,
+                                 RegisterMapper registerMapper, TempDataService tempDataService) {
         this.memberRepository = memberRepository;
         this.authManager = authManager;
         this.emailService = emailService;
@@ -53,6 +69,12 @@ public class AuthenticationService {
         this.context = context;
         this.memberDTOMapper = memberDTOMapper;
         this.registerMapper = registerMapper;
+        this.tempDataService = tempDataService;
+    }
+
+    private static ResponseEntity<MemberDTO> getUnauthorizedResponse(LoginRequest loginRequest) {
+        logger.info("Failed login attempt for: {}", loginRequest.email());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     public Optional<Member> findMemberByToken(String token) {
@@ -65,13 +87,13 @@ public class AuthenticationService {
 
     @Transactional
     public ResponseEntity<MemberDTO> verifyLogin(LoginRequest loginRequest) {
-        Authentication authentication =
-                authManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password()));
+        try {
+            Authentication authentication =
+                    authManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password()));
+            if (authentication.isAuthenticated()) {
+                Member foundMember = memberRepository.findByEmail(loginRequest.email());
+                // force token update on every login
 
-        if (authentication.isAuthenticated()) {
-            Member foundMember = memberRepository.findByEmail(loginRequest.email());
-            // force token update on every login
-            updateMemberToken(foundMember);
 //            UserDetails userDetails = context.getBean(MemberDetailsService.class).loadUserByUsername(loginRequest.email());
 //
 //            if (foundMember.getToken() == null ||
@@ -79,10 +101,16 @@ public class AuthenticationService {
 //                    !jwtService.validateToken(foundMember.getToken(), userDetails)) {
 //                updateMemberToken(foundMember);
 //            }
-            return ResponseEntity.ok(memberDTOMapper.apply(foundMember));
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                logger.info("User {} logged in.", loginRequest.email());
+                updateMemberToken(foundMember);
+                return ResponseEntity.ok(memberDTOMapper.apply(foundMember));
+            } else {
+                return getUnauthorizedResponse(loginRequest);
+            }
+        } catch (AuthenticationException e) {
+            return getUnauthorizedResponse(loginRequest);
         }
+
     }
 
     @Transactional
@@ -92,9 +120,9 @@ public class AuthenticationService {
 
         checkEmail(registerResponse, member);
         checkUsername(registerResponse, member);
-        hashPassword(registerResponse, member);
+        hashPassword(registerResponse, member, registerRequest.password());
 
-        if(registerResponse.hasNoErrors()) {
+        if (registerResponse.hasNoErrors()) {
             registerResponse.setToken(updateMemberToken(member));
             memberRepository.save(member);
         }
@@ -103,7 +131,7 @@ public class AuthenticationService {
     }
 
     private String updateMemberToken(Member member) {
-        System.out.println("Token is null or invalid, generating new token for: " + member.getEmail());
+        logger.info("Generating new token for: {}", member.getEmail());
         String token = jwtService.generateToken(member);
         member.setToken(token);
         memberRepository.updateTokenByEmail(member.getEmail(), member.getToken());
@@ -114,14 +142,14 @@ public class AuthenticationService {
         ErrorList errorList = new ErrorList("Email");
         registerResponse.getErrorLists().add(errorList);
 
-        if(member.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+        if (member.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
             member.setEmail(member.getEmail().toLowerCase());
         } else {
             errorList.getErrors().add("Invalid email.");
             return;
         }
 
-        if(findMemberByEmail(member.getEmail()) != null) {
+        if (findMemberByEmail(member.getEmail()) != null) {
             errorList.getErrors().add("Email already in use.");
         }
     }
@@ -130,7 +158,7 @@ public class AuthenticationService {
         ErrorList errorList = new ErrorList("Username");
         registerResponse.getErrorLists().add(errorList);
 
-        if(member.getUsername().matches("^[a-zA-Z0-9]*$")) {
+        if (member.getUsername().matches("^[a-zA-Z0-9]*$")) {
             member.setUsername(member.getUsername().toLowerCase());
         } else {
             errorList.getErrors().add("Username must contain only letters and numbers.");
@@ -138,17 +166,17 @@ public class AuthenticationService {
         }
 
 
-        if(member.getUsername().length() < 3) {
+        if (member.getUsername().length() < 3) {
             errorList.getErrors().add("Username must be at least 3 characters long.");
         }
     }
 
-    public void hashPassword(RegisterResponse registerResponse, Member member) {
+    public void hashPassword(ErrorListsImpl errorListsImpl, Member member, String newPassword) {
         ErrorList errorList = new ErrorList("Password");
-        registerResponse.getErrorLists().add(errorList);
+        errorListsImpl.getErrorLists().add(errorList);
 
-        if (member.getPassword().matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{" + MIN_PASSWORD_LENGTH + ",}$")) {
-            member.setPassword(encoder.encode(member.getPassword()));
+        if (newPassword.matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{" + MIN_PASSWORD_LENGTH + ",}$")) {
+            member.setPassword(encoder.encode(newPassword));
         } else {
             errorList.getErrors().add("Password cannot be empty, must contain at least " +
                     MIN_PASSWORD_LENGTH +
@@ -164,6 +192,31 @@ public class AuthenticationService {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
+    public ResponseEntity<SendEmailVerificationResponse> sendEmailVerification(SendEmailVerificationRequest sendEmailVerificationRequest) {
+        int verificationCode = generateRandomNumber(5);
+        logger.info("Verification code for {}: {}", sendEmailVerificationRequest.email(), verificationCode);
+        tempDataService.putValue(getVerificationCodeKey(sendEmailVerificationRequest.email()), String.valueOf(verificationCode));
+
+        EmailVerificationContainer emailVerificationContainer = new EmailVerificationContainer(
+                sendEmailVerificationRequest.email(),
+                "Verification Email",
+                null,
+                true,
+                "email-verification-template",
+                verificationCode);
+
+        SendEmailVerificationResponse sendEmailVerificationResponse = new SendEmailVerificationResponse();
+
+        try {
+            emailService.sendVerificationEmail(emailVerificationContainer);
+            return ResponseEntity.ok(sendEmailVerificationResponse);
+        } catch (MessagingException e) {
+            System.out.println(Arrays.toString(e.getStackTrace()));
+            sendEmailVerificationResponse.getErrors().add("Failed to send verification email.");
+            return ResponseEntity.ok(sendEmailVerificationResponse);
+        }
+    }
+
     @Transactional
     public ResponseEntity<VerifyEmailResponse> verifyEmail(VerifyEmailRequest verifyEmailRequest) {
         VerifyEmailResponse verifyEmailResponse = new VerifyEmailResponse();
@@ -173,38 +226,78 @@ public class AuthenticationService {
             verifyEmailResponse.getErrors().add("User with this email not found.");
         }
 
-        if (encoder.matches(verifyEmailRequest.verificationCode(), verifyEmailRequest.verificationCodeHash())) {
+        if (tempDataService.getValue(getVerificationCodeKey(verifyEmailRequest.email())).toString().equals(verifyEmailRequest.verificationCode())) {
+            tempDataService.removeValue(getVerificationCodeKey(verifyEmailRequest.email()));
+
             memberRepository.updateEmailVerifiedByEmail(verifyEmailRequest.email());
             verifyEmailResponse.setSuccess(true);
         } else {
-            verifyEmailResponse.getErrors().add("Invalid verification code.");
+            verifyEmailResponse.getErrors().add("Verification Code is Invalid.");
         }
         return ResponseEntity.ok(verifyEmailResponse);
     }
 
-    public ResponseEntity<SendEmailVerificationResponse> sendEmailVerification(SendEmailVerificationRequest sendEmailVerificationRequest) {
-        int verificationCode = generateRandomNumber(5);
-        System.out.println("Verification code for " + sendEmailVerificationRequest.email() +  ": " + verificationCode);
-        String verificationCodeHash = encoder.encode(String.valueOf(verificationCode));
-        EmailVerificationContainer emailVerificationContainer = new EmailVerificationContainer(
-                sendEmailVerificationRequest.email(),
-                "Verification Email",
-                "Here is your verification code: " + verificationCode,
-                true,
-                "email-verification-template",
-                verificationCode);
+    @Transactional
+    public ResponseEntity<RecoverPasswordResponse> recoverPassword(RecoverPasswordRequest recoverPasswordRequest) {
+        RecoverPasswordResponse recoverPasswordResponse = new RecoverPasswordResponse();
+        Member member = findMemberByEmail(recoverPasswordRequest.email());
 
-        SendEmailVerificationResponse sendEmailVerificationResponse = new SendEmailVerificationResponse();
-
-        try {
-            emailService.sendVerificationEmail(emailVerificationContainer);
-            sendEmailVerificationResponse.setVerificationCodeHash(verificationCodeHash);
-            return ResponseEntity.ok(sendEmailVerificationResponse);
-        } catch (MessagingException e) {
-            System.out.println(e.getMessage());
-            sendEmailVerificationResponse.getErrors().add("Failed to send verification email.");
-            return ResponseEntity.ok(sendEmailVerificationResponse);
+        if (member == null) {
+            recoverPasswordResponse.getErrors().add("User with this email not found.");
+        } else {
+            String token = updateMemberToken(member);
+            PasswordRecoveryContainer passwordRecoveryContainer = new PasswordRecoveryContainer(
+                    member.getEmail(),
+                    "Password Recovery",
+                    null,
+                    true,
+                    "password-recovery-template",
+                    token,
+                    recoverPasswordRequest.pagePath());
+            try {
+                emailService.sendPasswordRecoveryEmail(passwordRecoveryContainer);
+                recoverPasswordResponse.setSuccess(true);
+            } catch (MessagingException e) {
+                System.out.println(Arrays.toString(e.getStackTrace()));
+                recoverPasswordResponse.getErrors().add("Failed to send password recovery email.");
+            }
         }
+
+        return ResponseEntity.ok(recoverPasswordResponse);
     }
 
+    @Transactional
+    public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest resetPasswordRequest, String authHeader) {
+        ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse();
+        String token = getToken(authHeader).orElse("");
+        Optional<Member> memberOpt = findMemberByToken(token);
+
+        if (memberOpt.isPresent()) {
+            Member member = memberOpt.get();
+            if(encoder.matches(resetPasswordRequest.newPassword(), member.getPassword())) {
+                ErrorList errorList = new ErrorList("Password");
+                errorList.getErrors().add("New password cannot be the same as the old password.");
+                resetPasswordResponse.getErrorLists().add(errorList);
+            } else {
+                hashPassword(resetPasswordResponse, member, resetPasswordRequest.newPassword());
+                logger.info("Password reset for: {}", member.getEmail());
+                this.memberRepository.updatePasswordByToken(token, member.getPassword());
+                resetPasswordResponse.setSuccess(true);
+            }
+
+        } else {
+            ErrorList errorList = new ErrorList("Token");
+            errorList.getErrors().add("Invalid token.");
+            resetPasswordResponse.getErrorLists().add(errorList);
+        }
+
+        return ResponseEntity.ok(resetPasswordResponse);
+    }
+
+    public ResponseEntity<Boolean> verifyToken(String authHeader) {
+        return getToken(authHeader).map(token ->
+                        findMemberByToken(token).map(member -> ResponseEntity.ok(true))
+                                .orElseGet(() -> ResponseEntity.ok(false)))
+                .orElseGet(() -> ResponseEntity.ok(false));
+    }
 }

@@ -2,6 +2,7 @@ package mindsit.digitalactivismapp.config;
 
 import mindsit.digitalactivismapp.filter.JWTFilter;
 import mindsit.digitalactivismapp.service.member.MemberDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -32,6 +33,9 @@ public class SecurityConfig {
     private final MemberDetailsService memberDetailsService;
     private final JWTFilter jwtFilter;
 
+    @Value("${custom.url.frontend:}")
+    private String frontendUrl;
+
     public SecurityConfig(MemberDetailsService memberDetailsService, JWTFilter jwtFilter) {
         this.memberDetailsService = memberDetailsService;
         this.jwtFilter = jwtFilter;
@@ -39,11 +43,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         return http
                 .cors(customizer ->
                         customizer.configurationSource(request -> {
                             CorsConfiguration cors = new CorsConfiguration();
-                            cors.setAllowedOrigins(List.of("http://localhost:4500"));
+                            cors.setAllowedOrigins(List.of(frontendUrl));
                             cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                             cors.setAllowedHeaders(List.of("*"));
                             cors.setAllowCredentials(true);

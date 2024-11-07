@@ -1,7 +1,7 @@
 package mindsit.digitalactivismapp.mapper.member;
 
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.modelDTO.authentication.RegisterRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.regsiter.RegisterRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
@@ -12,8 +12,7 @@ public class RegisterMapper implements Function<RegisterRequest, Member> {
     public Member apply(RegisterRequest registerRequest) {
         return new Member(
                 registerRequest.username(),
-                registerRequest.email(),
-                registerRequest.password()
+                registerRequest.email()
         );
     }
 }

@@ -18,8 +18,7 @@ import java.util.function.Function;
 
 @Service
 public class JWTService {
-    @Value("${custom.spring.security.secret-key:}")
-    private String secretKey;
+    private String secretKey = "34ca766daa003014fa2f4454cd6adbeef46bf430f1da6c79f3ae2e4bc886c079";
 
     public JWTService() {
         // TODO - ENABLE THIS IN PRODUCTION FOR A RANDOM KEY GENERATION ON EVERY STARTUP

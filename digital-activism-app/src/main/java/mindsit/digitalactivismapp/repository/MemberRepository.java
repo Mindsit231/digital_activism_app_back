@@ -18,6 +18,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Integer updatePasswordByEmail(@Param("email") String email, @Param("password") String password);
 
     @Modifying
+    @Query("Update Member c SEt c.password = :password WHERE c.token = :token")
+    Integer updatePasswordByToken(@Param("token") String token, @Param("password") String password);
+
+    @Modifying
     @Query("UPDATE Member c SET c.token = :token WHERE c.email = :email")
     Integer updateTokenByEmail(@Param("email") String email, @Param("token") String token);
 

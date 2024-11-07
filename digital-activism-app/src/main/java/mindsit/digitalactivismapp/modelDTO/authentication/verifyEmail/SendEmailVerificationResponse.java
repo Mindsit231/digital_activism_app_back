@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.modelDTO.authentication;
+package mindsit.digitalactivismapp.modelDTO.authentication.verifyEmail;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +11,5 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class SendEmailVerificationResponse {
-    private String verificationCodeHash;
     private List<String> errors = new ArrayList<>();
 }

@@ -26,11 +26,23 @@ spring:
     properties:
       hibernate:
         use_jdbc_metadata_defaults: false
+    open-in-view: false
+
+custom:
+  url:
+    frontend: http://localhost:4500
+    backend: http://localhost:"${server.port}"
+
 
 spring.mail.host: smtp.gmail.com
 spring.mail.port: 587
-spring.mail.username: "${custom.email.username}"
-spring.mail.password: "${custom.email.password}"
+spring.mail.username: "${SPRING_MAIL_USERNAME}"
+spring.mail.password: "${SPRING_MAIL_PASSWORD}"
+spring.mail.enabled: false
 
 spring.servlet.multipart.max-file-size: 100000000MB
 spring.servlet.multipart.max-request-size: 100000000MB
+
+
+
+

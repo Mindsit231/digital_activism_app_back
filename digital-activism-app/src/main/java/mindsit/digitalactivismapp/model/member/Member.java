@@ -49,10 +49,10 @@ public class Member implements MyEntity {
     @Column(name = "token", columnDefinition = "TEXT")
     private String token;
 
-    public Member(String username, String email, String password) {
+    public Member(String username, String email) {
         this.username = username;
         this.email = email;
-        this.password = password;
+        this.password = "";
         this.role = Role.AUTHENTICATED;
         this.creationDate = new Date();
     }

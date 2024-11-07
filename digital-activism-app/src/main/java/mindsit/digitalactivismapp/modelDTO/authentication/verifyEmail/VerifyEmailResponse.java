@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.modelDTO.authentication;
+package mindsit.digitalactivismapp.modelDTO.authentication.verifyEmail;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

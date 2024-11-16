@@ -3,6 +3,7 @@ package mindsit.digitalactivismapp.controller;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.Tag;
+import mindsit.digitalactivismapp.modelDTO.MemberDTO;
 import mindsit.digitalactivismapp.service.member.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -35,12 +36,11 @@ public class MemberController extends EntityController<Member, MemberService> {
         return ResponseEntity.ok(entityService.updatePfpNameByEmail(pfpNameByEmail));
     }
 
-    @Override
-    @PutMapping("/authenticated/member/update")
-    public ResponseEntity<Member> updateEntity(
+    @PostMapping("/authenticated/member/update")
+    public ResponseEntity<MemberDTO> update(
             @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-            @RequestBody Member entity) {
-        return super.updateEntity(authHeader, entity);
+            @RequestBody Member member) {
+        return entityService.update(member, authHeader);
     }
 
     @PostMapping("/authenticated/member/upload-files")
@@ -68,7 +68,20 @@ public class MemberController extends EntityController<Member, MemberService> {
     @PostMapping("/authenticated/member/propose-new-tag")
     public ResponseEntity<Tag> proposeNewTag(
             @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-            @RequestBody String tag) {
-        return ResponseEntity.ok(entityService.proposeNewTag(tag, authHeader));
+            @RequestBody String tagProposal) {
+        return ResponseEntity.ok(entityService.proposeNewTag(tagProposal, authHeader));
+    }
+
+    @PostMapping("/authenticated/member/fetch-tags-by-token")
+    public ResponseEntity<List<Tag>> fetchTagsByToken(
+            @RequestHeader(AUTHORIZATION_HEADER) String authHeader) {
+        return ResponseEntity.ok(entityService.fetchTagsByToken(authHeader));
+    }
+
+    @PostMapping("/authenticated/member/delete-tag-by-token")
+    public ResponseEntity<Boolean> deleteTagByToken(
+            @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
+            @RequestBody Tag tag) {
+        return ResponseEntity.ok(entityService.deleteTagByToken(tag, authHeader));
     }
 }

@@ -26,12 +26,6 @@ public abstract class EntityController<T extends MyEntity, S extends EntityServi
         this.entityClass = entityClass;
     }
 
-    public ResponseEntity<T> updateEntity(
-            @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-            @RequestBody T entity) {
-        return ResponseEntity.ok(entityService.updateEntity(entity));
-    }
-
     public ResponseEntity<List<String>> uploadFiles(
             @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
             @RequestParam("files") List<MultipartFile> multipartFiles)

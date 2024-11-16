@@ -9,4 +9,7 @@ public interface MemberTagRepository extends JpaRepository<MemberTag, Long> {
     @Modifying
     @Query("DELETE FROM MemberTag p WHERE p.id = :id")
     Integer deleteEntityById(Long id);
+
+    @Modifying
+    void deleteByMemberIdAndTagId(Long id, Long id1);
 }

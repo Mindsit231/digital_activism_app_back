@@ -1,17 +1,21 @@
 package mindsit.digitalactivismapp.service.member;
 
+import mindsit.digitalactivismapp.mapper.member.MemberDTOMapper;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.MemberTag;
 import mindsit.digitalactivismapp.model.tag.Tag;
+import mindsit.digitalactivismapp.modelDTO.MemberDTO;
 import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.repository.tag.MemberTagRepository;
 import mindsit.digitalactivismapp.repository.tag.TagRepository;
 import mindsit.digitalactivismapp.service.EntityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,14 +26,16 @@ public class MemberService extends EntityService<Member, MemberRepository> {
 
     private final TagRepository tagRepository;
     private final MemberTagRepository memberTagRepository;
+    private final MemberDTOMapper memberDTOMapper;
 
     @Autowired
     public MemberService(MemberRepository memberRepository,
                          TagRepository tagRepository,
-                         MemberTagRepository memberTagRepository) {
+                         MemberTagRepository memberTagRepository, MemberDTOMapper memberDTOMapper) {
         super(memberRepository);
         this.tagRepository = tagRepository;
         this.memberTagRepository = memberTagRepository;
+        this.memberDTOMapper = memberDTOMapper;
     }
 
     public Optional<Member> findById(Long id) {
@@ -68,10 +74,47 @@ public class MemberService extends EntityService<Member, MemberRepository> {
         }
     }
 
-//    public List<Tag> fetchTagsByToken(String authHeader) {
-//        Optional<Member> member =  getToken(authHeader).map(entityRepository::findByToken);
-//
-//
-//
-//    }
+    public List<Tag> fetchTagsByToken(String authHeader) {
+        Optional<Member> optionalMember =  getToken(authHeader).map(entityRepository::findByToken);
+        List<Tag> tags = new ArrayList<>();
+        optionalMember.ifPresent(member -> member.getMemberTags().forEach(memberTag -> {
+            Optional<Tag> optionalTag = tagRepository.findById(memberTag.getTagId());
+            optionalTag.ifPresent(tags::add);
+        }));
+        return tags;
+    }
+
+    @Transactional
+    public Boolean deleteTagByToken(Tag tag, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
+        Optional<Tag> optionalTag = tagRepository.findById(tag.getId());
+
+        if (optionalMember.isPresent() && optionalTag.isPresent()) {
+            memberTagRepository.deleteByMemberIdAndTagId(optionalMember.get().getId(), optionalTag.get().getId());
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    @Transactional
+    public ResponseEntity<MemberDTO> update(Member member, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
+
+        if(optionalMember.isPresent()) {
+            if(member.getUsername() != null && !member.getUsername().isEmpty()) {
+                optionalMember.get().setUsername(member.getUsername());
+            }
+            if(member.getEmail() != null && !member.getEmail().isEmpty()) {
+                optionalMember.get().setEmail(member.getEmail());
+            }
+
+            updateEntity(optionalMember.get());
+
+            return ResponseEntity.ok(memberDTOMapper.apply(optionalMember.get()));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

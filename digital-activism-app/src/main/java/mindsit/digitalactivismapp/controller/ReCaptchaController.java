@@ -1,7 +1,7 @@
-package mindsit.digitalactivismapp.controller.reCaptcha;
+package mindsit.digitalactivismapp.controller;
 
 import mindsit.digitalactivismapp.modelDTO.reCaptcha.ReCaptchaRequest;
-import mindsit.digitalactivismapp.service.reCaptcha.ReCaptchaService;
+import mindsit.digitalactivismapp.service.ReCaptchaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

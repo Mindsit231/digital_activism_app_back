@@ -6,9 +6,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import mindsit.digitalactivismapp.config.Role;
 import mindsit.digitalactivismapp.model.MyEntity;
+import mindsit.digitalactivismapp.model.tag.MemberTag;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -48,6 +50,13 @@ public class Member implements MyEntity {
 
     @Column(name = "token", columnDefinition = "TEXT")
     private String token;
+
+    @OneToMany(
+            fetch = FetchType.EAGER,
+            targetEntity = MemberTag.class
+    )
+    @JoinColumn(name = "member_id", updatable = false, insertable = false)
+    private List<MemberTag> memberTags;
 
     public Member(String username, String email) {
         this.username = username;

@@ -1,8 +1,7 @@
-package mindsit.digitalactivismapp.service.message;
+package mindsit.digitalactivismapp.service;
 
 import mindsit.digitalactivismapp.model.message.Message;
 import mindsit.digitalactivismapp.repository.message.MessageRepository;
-import mindsit.digitalactivismapp.service.EntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

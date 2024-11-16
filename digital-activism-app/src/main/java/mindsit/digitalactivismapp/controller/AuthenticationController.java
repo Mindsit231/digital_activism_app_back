@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class AuthenticationController {
-    private final static String AUTHORIZATION_HEADER = "Authorization";
+    public final static String AUTHORIZATION_HEADER = "Authorization";
     private final AuthenticationService authenticationService;
 
     public AuthenticationController(AuthenticationService authenticationService) {

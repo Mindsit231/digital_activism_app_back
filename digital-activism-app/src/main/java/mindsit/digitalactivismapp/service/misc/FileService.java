@@ -33,7 +33,13 @@ public class FileService {
         for (MultipartFile file : multipartFiles) {
             String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
             Path fileStorage = get(DIRECTORY + directory + "/" + fileName).toAbsolutePath().normalize();
-            copy(file.getInputStream(), fileStorage, StandardCopyOption.REPLACE_EXISTING);
+
+            try {
+                copy(file.getInputStream(), fileStorage, StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("Copying file: " + fileName + " to " + fileStorage);
+            } catch (IOException e) {
+                System.out.println("Could not store file " + fileName + ". Please try again!");
+            }
 
             fileNames.add(fileName);
         }
@@ -44,7 +50,7 @@ public class FileService {
     public Resource downloadFile(String fileName, String directory) throws IOException {
         Path filePath = get(DIRECTORY + directory).toAbsolutePath().normalize().resolve(fileName);
         if (!Files.exists(filePath)) {
-            throw new IOException(fileName + " was not found");
+            System.out.println(fileName + " was not found");
         }
         return new UrlResource(filePath.toUri());
     }

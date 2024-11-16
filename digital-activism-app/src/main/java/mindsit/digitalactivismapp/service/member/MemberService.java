@@ -1,41 +1,39 @@
 package mindsit.digitalactivismapp.service.member;
 
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.model.query.update.PasswordByEmail;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
-import mindsit.digitalactivismapp.model.query.update.TokenByEmail;
-import mindsit.digitalactivismapp.model.query.update.TokenByOldToken;
+import mindsit.digitalactivismapp.model.tag.MemberTag;
+import mindsit.digitalactivismapp.model.tag.Tag;
 import mindsit.digitalactivismapp.repository.MemberRepository;
+import mindsit.digitalactivismapp.repository.tag.MemberTagRepository;
+import mindsit.digitalactivismapp.repository.tag.TagRepository;
 import mindsit.digitalactivismapp.service.EntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+
+import static mindsit.digitalactivismapp.custom.Functions.getToken;
 
 @Service
 public class MemberService extends EntityService<Member, MemberRepository> {
 
-//    private final static int MIN_PASSWORD_LENGTH = 12;
-//    private final AuthenticationManager authManager;
-//    private final JWTService jwtService;
-//    private final ApplicationContext context;
-//    private final MemberDTOMapper memberDTOMapper;
-//    private final RegisterMapper registerMapper;
-//    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(PASSWORD_ROUNDS);
+    private final TagRepository tagRepository;
+    private final MemberTagRepository memberTagRepository;
 
     @Autowired
-    public MemberService(MemberRepository memberRepository
-//                         AuthenticationManager authManager,
-//                         JWTService jwtService,
-//                         ApplicationContext context, MemberDTOMapper memberDTOMapper, RegisterMapper registerMapper
-    ) {
+    public MemberService(MemberRepository memberRepository,
+                         TagRepository tagRepository,
+                         MemberTagRepository memberTagRepository) {
         super(memberRepository);
-//        this.authManager = authManager;
-//        this.jwtService = jwtService;
-//        this.context = context;
-//        this.memberDTOMapper = memberDTOMapper;
-//        this.registerMapper = registerMapper;
+        this.tagRepository = tagRepository;
+        this.memberTagRepository = memberTagRepository;
+    }
+
+    public Optional<Member> findById(Long id) {
+        return entityRepository.findById(id);
     }
 
     @Transactional
@@ -45,26 +43,35 @@ public class MemberService extends EntityService<Member, MemberRepository> {
     }
 
     @Transactional
-    public Integer updatePasswordByEmail(PasswordByEmail passwordByEmail) {
-        return entityRepository.updatePasswordByEmail(passwordByEmail.getEmail(), passwordByEmail.getNewPassword());
-    }
-
-    @Transactional
-    public Integer updateTokenByEmail(TokenByEmail tokenByEmail) {
-        return entityRepository.updateTokenByEmail(tokenByEmail.getEmail(), tokenByEmail.getNewToken());
-    }
-
-    @Transactional
-    public Integer updateTokenByOldToken(TokenByOldToken tokenByOldToken) {
-        return entityRepository.updateTokenByOldToken(tokenByOldToken.getOldToken(), tokenByOldToken.getNewToken());
-    }
-
-    @Transactional
-    public Integer updatePfpImgNameByEmail(PfpNameByEmail pfpNameByEmail) {
+    public Integer updatePfpNameByEmail(PfpNameByEmail pfpNameByEmail) {
         return entityRepository.updatePfpNameByEmail(pfpNameByEmail.getEmail(), pfpNameByEmail.getPfpName());
     }
 
-    public List<Member> findMembersByUsername(String username) {
-        return entityRepository.findMembersByUsername(username);
+    public Tag proposeNewTag(String tagProposal, String authHeader) {
+        String formattedTag = tagProposal.toLowerCase();
+        Optional<Tag> existingTag = Optional.ofNullable(tagRepository.findByName(formattedTag));
+
+        if (existingTag.isEmpty()) {
+            tagRepository.save(new Tag(formattedTag));
+        }
+
+        Optional<Tag> optionalTag = Optional.ofNullable(tagRepository.findByName(formattedTag));
+
+        if(optionalTag.isPresent()) {
+            getToken(authHeader).map(entityRepository::findByToken).ifPresent(member -> {
+                memberTagRepository.save(new MemberTag(member.getId(), optionalTag.get().getId()));
+
+            });
+            return optionalTag.get();
+        } else {
+            return null;
+        }
     }
+
+//    public List<Tag> fetchTagsByToken(String authHeader) {
+//        Optional<Member> member =  getToken(authHeader).map(entityRepository::findByToken);
+//
+//
+//
+//    }
 }

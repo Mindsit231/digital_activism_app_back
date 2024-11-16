@@ -1,12 +1,14 @@
 package mindsit.digitalactivismapp.model.tag;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mindsit.digitalactivismapp.model.MyEntity;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "tag")
 public class Tag implements MyEntity {
@@ -17,4 +19,8 @@ public class Tag implements MyEntity {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    public Tag(String name) {
+        this.name = name;
+    }
 }

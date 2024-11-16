@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.service.reCaptcha;
+package mindsit.digitalactivismapp.service;
 
 import mindsit.digitalactivismapp.modelDTO.reCaptcha.ReCaptchaRequest;
 import org.springframework.http.HttpMethod;

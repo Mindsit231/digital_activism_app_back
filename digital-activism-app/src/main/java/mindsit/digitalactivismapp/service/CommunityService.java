@@ -1,8 +1,7 @@
-package mindsit.digitalactivismapp.service.community;
+package mindsit.digitalactivismapp.service;
 
 import mindsit.digitalactivismapp.model.community.Community;
 import mindsit.digitalactivismapp.repository.community.CommunityRepository;
-import mindsit.digitalactivismapp.service.EntityService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

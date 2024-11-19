@@ -69,7 +69,7 @@ public class AuthenticationController {
 
     @PostMapping("/authenticated/check-old-password")
     public ResponseEntity<Boolean> checkOldPassword(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-                                                    @RequestBody String newPassword) {
-        return authenticationService.checkOldPassword(newPassword, authHeader);
+                                                    @RequestBody String oldPassword) {
+        return authenticationService.checkOldPassword(oldPassword, authHeader);
     }
 }

@@ -5,10 +5,8 @@ import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.MemberTag;
 import mindsit.digitalactivismapp.model.tag.Tag;
-import mindsit.digitalactivismapp.modelDTO.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
-import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorLists;
-import mindsit.digitalactivismapp.modelDTO.authentication.passwordReset.ResetPasswordRequest;
+import mindsit.digitalactivismapp.modelDTO.member.UpdateResponse;
 import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.repository.tag.MemberTagRepository;
 import mindsit.digitalactivismapp.repository.tag.TagRepository;
@@ -31,6 +29,8 @@ import static mindsit.digitalactivismapp.service.authentication.AuthenticationSe
 
 @Service
 public class MemberService extends EntityService<Member, MemberRepository> {
+
+    public final static String MEMBER_ERROR_LIST = "Member";
 
     private final TagRepository tagRepository;
     private final MemberTagRepository memberTagRepository;
@@ -110,36 +110,38 @@ public class MemberService extends EntityService<Member, MemberRepository> {
     }
 
     @Transactional
-    public ResponseEntity<MemberDTO> update(Member member, String authHeader) {
+    public ResponseEntity<UpdateResponse> update(Member member, String authHeader) {
         Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
-        ErrorLists errorLists = new ErrorLists();
+        UpdateResponse updateResponse = new UpdateResponse();
 
         if (optionalMember.isPresent()) {
-            authenticationService.checkUsername(errorLists, member);
-            authenticationService.checkEmail(errorLists, member);
+            authenticationService.checkUsername(updateResponse.getErrorLists(), member);
+            authenticationService.checkEmail(updateResponse.getErrorLists(), member);
 
-            if(member.getUsername() != null && !member.getUsername().isEmpty() && !errorLists.findErrorListByName(USERNAME_ERROR_LIST).hasErrors()) {
+            if(member.getUsername() != null && !member.getUsername().isEmpty() && !updateResponse.getErrorLists().findErrorListByName(USERNAME_ERROR_LIST).hasErrors()) {
                 logger.info("Username updated from '{}' to '{}' for memberId '{}'", optionalMember.get().getUsername(), member.getUsername(), optionalMember.get().getId());
                 optionalMember.get().setUsername(member.getUsername());
             }
-            if(member.getEmail() != null && !member.getEmail().isEmpty() && !errorLists.findErrorListByName(EMAIL_ERROR_LIST).hasErrors()) {
+            if(member.getEmail() != null && !member.getEmail().isEmpty() && !updateResponse.getErrorLists().findErrorListByName(EMAIL_ERROR_LIST).hasErrors()) {
                 logger.info("Email updated from '{}' to '{}' for memberId '{}'", optionalMember.get().getEmail(), member.getEmail(), optionalMember.get().getId());
                 optionalMember.get().setEmail(member.getEmail());
             }
 
             if (member.getPassword() != null && !member.getPassword().isEmpty()) {
-                authenticationService.resetPasswordSub(errorLists, member.getPassword(), authHeader);
+                authenticationService.resetPasswordSub(updateResponse.getErrorLists(), member.getPassword(), authHeader);
             }
 
-            if(errorLists.hasNoErrors()) {
+            if(updateResponse.getErrorLists().hasNoErrors()) {
                 updateEntity(optionalMember.get());
-                return ResponseEntity.ok(memberDTOMapper.apply(optionalMember.get()));
-            } else {
-                return ResponseEntity.badRequest().body(memberDTOMapper.apply(optionalMember.get()));
+                updateResponse.setMemberDTO(memberDTOMapper.apply(optionalMember.get()));
             }
 
-        } else {
-            return ResponseEntity.notFound().build();
+        }  else {
+            ErrorList errorList = new ErrorList(MEMBER_ERROR_LIST);
+            errorList.getErrors().add("Member not found");
+            updateResponse.getErrorLists().getErrorList().add(errorList);
         }
+
+        return ResponseEntity.ok(updateResponse);
     }
 }

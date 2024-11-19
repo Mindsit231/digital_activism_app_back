@@ -314,15 +314,15 @@ public class AuthenticationService {
                 .orElseGet(() -> ResponseEntity.ok(false));
     }
 
-    public ResponseEntity<Boolean> checkOldPassword(String newPassword, String authHeader) {
+    public ResponseEntity<Boolean> checkOldPassword(String oldPassword, String authHeader) {
         return getToken(authHeader)
                 .map(token -> findMemberByToken(token)
                         .map(member -> {
-                            if (encoder.matches(newPassword, member.getPassword())) {
-                                System.out.println("New password matches old password.");
+                            if (encoder.matches(oldPassword, member.getPassword())) {
+                                System.out.println("Old password matches current password.");
                                 return ResponseEntity.ok(true);
                             } else {
-                                System.out.println("New password does not match old password.");
+                                System.out.println("Old password does not match current password.");
                                 return ResponseEntity.ok(false);
                             }
                         })

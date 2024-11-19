@@ -9,10 +9,10 @@ import java.util.List;
 @Getter
 @Setter
 public class ErrorLists {
-    private List<ErrorList> errorLists = new ArrayList<>();
+    private List<ErrorList> errorList = new ArrayList<>();
 
     public ErrorList findErrorListByName(String name) {
-        for (ErrorList errorList : errorLists) {
+        for (ErrorList errorList : errorList) {
             if (errorList.getName().equals(name)) {
                 return errorList;
             }
@@ -21,13 +21,13 @@ public class ErrorLists {
     }
 
     public void add(ErrorList errorList) {
-        errorLists.add(errorList);
+        this.errorList.add(errorList);
     }
 
     public boolean hasNoErrors() {
         boolean hasNoErrors = true;
 
-        for (ErrorList errorList : errorLists) {
+        for (ErrorList errorList : errorList) {
             if (errorList.hasErrors()) {
                 hasNoErrors = false;
                 break;

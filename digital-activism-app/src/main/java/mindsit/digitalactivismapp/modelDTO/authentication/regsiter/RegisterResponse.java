@@ -7,9 +7,6 @@ import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorLists;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorListsImpl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,7 +17,7 @@ public class RegisterResponse implements ErrorListsImpl {
     public boolean hasNoErrors() {
         boolean hasNoErrors = true;
 
-        for (ErrorList errorList : errorLists.getErrorLists()) {
+        for (ErrorList errorList : errorLists.getErrorList()) {
             if (!errorList.getErrors().isEmpty()) {
                 hasNoErrors = false;
                 break;

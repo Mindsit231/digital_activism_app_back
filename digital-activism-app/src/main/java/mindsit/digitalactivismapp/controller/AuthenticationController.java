@@ -66,4 +66,10 @@ public class AuthenticationController {
                                                                @RequestBody ResetPasswordRequest recoverPasswordRequest) {
         return authenticationService.resetPassword(recoverPasswordRequest, authHeader);
     }
+
+    @PostMapping("/authenticated/check-old-password")
+    public ResponseEntity<Boolean> checkOldPassword(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
+                                                    @RequestBody String newPassword) {
+        return authenticationService.checkOldPassword(newPassword, authHeader);
+    }
 }

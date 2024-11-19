@@ -15,4 +15,8 @@ public class ErrorList {
     public ErrorList(String name) {
         this.name = name;
     }
+
+    public boolean hasErrors() {
+        return !errors.isEmpty();
+    }
 }

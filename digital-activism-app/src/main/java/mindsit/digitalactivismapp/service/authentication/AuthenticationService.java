@@ -6,6 +6,7 @@ import mindsit.digitalactivismapp.mapper.member.RegisterMapper;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
+import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorLists;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorListsImpl;
 import mindsit.digitalactivismapp.modelDTO.authentication.login.LoginRequest;
 import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.PasswordRecoveryContainer;
@@ -34,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static mindsit.digitalactivismapp.config.SecurityConfig.PASSWORD_ROUNDS;
@@ -43,6 +45,10 @@ import static mindsit.digitalactivismapp.service.authentication.TempDataService.
 
 @Service
 public class AuthenticationService {
+
+    public final static String USERNAME_ERROR_LIST = "Username";
+    public final static String EMAIL_ERROR_LIST = "Email";
+    public final static String PASSWORD_ERROR_LIST = "Password";
 
     private final static int MIN_PASSWORD_LENGTH = 12;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
@@ -118,9 +124,9 @@ public class AuthenticationService {
         Member member = registerMapper.apply(registerRequest);
         RegisterResponse registerResponse = new RegisterResponse();
 
-        checkEmail(registerResponse, member);
-        checkUsername(registerResponse, member);
-        hashPassword(registerResponse, member, registerRequest.password());
+        checkEmail(registerResponse.getErrorLists(), member);
+        checkUsername(registerResponse.getErrorLists(), member);
+        hashPassword(encoder, registerResponse.getErrorLists(), member, registerRequest.password());
 
         if (registerResponse.hasNoErrors()) {
             registerResponse.setToken(updateMemberToken(member));
@@ -138,9 +144,9 @@ public class AuthenticationService {
         return token;
     }
 
-    private void checkEmail(RegisterResponse registerResponse, Member member) {
-        ErrorList errorList = new ErrorList("Email");
-        registerResponse.getErrorLists().add(errorList);
+    public void checkEmail(ErrorLists errorLists, Member member) {
+        ErrorList errorList = new ErrorList(EMAIL_ERROR_LIST);
+        errorLists.add(errorList);
 
         if (member.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
             member.setEmail(member.getEmail().toLowerCase());
@@ -154,9 +160,9 @@ public class AuthenticationService {
         }
     }
 
-    private void checkUsername(RegisterResponse registerResponse, Member member) {
-        ErrorList errorList = new ErrorList("Username");
-        registerResponse.getErrorLists().add(errorList);
+    public void checkUsername(ErrorLists errorLists, Member member) {
+        ErrorList errorList = new ErrorList(USERNAME_ERROR_LIST);
+        errorLists.add(errorList);
 
         if (member.getUsername().matches("^[a-zA-Z0-9]*$")) {
             member.setUsername(member.getUsername().toLowerCase());
@@ -171,9 +177,9 @@ public class AuthenticationService {
         }
     }
 
-    public void hashPassword(ErrorListsImpl errorListsImpl, Member member, String newPassword) {
-        ErrorList errorList = new ErrorList("Password");
-        errorListsImpl.getErrorLists().add(errorList);
+    public static void hashPassword(BCryptPasswordEncoder encoder, ErrorLists errorLists, Member member, String newPassword) {
+        ErrorList errorList = new ErrorList(PASSWORD_ERROR_LIST);
+        errorLists.add(errorList);
 
         if (newPassword.matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{" + MIN_PASSWORD_LENGTH + ",}$")) {
             member.setPassword(encoder.encode(newPassword));
@@ -269,35 +275,58 @@ public class AuthenticationService {
     @Transactional
     public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest resetPasswordRequest, String authHeader) {
         ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse();
+        resetPasswordSub(resetPasswordResponse.getErrorLists(), resetPasswordRequest.newPassword(), authHeader);
+        if(resetPasswordResponse.getErrorLists().hasNoErrors()) {
+            resetPasswordResponse.setSuccess(true);
+        }
+
+        return ResponseEntity.ok(resetPasswordResponse);
+    }
+
+    @Transactional
+    public void resetPasswordSub(ErrorLists errorLists, String newPassword, String authHeader) {
         String token = getToken(authHeader).orElse("");
         Optional<Member> memberOpt = findMemberByToken(token);
 
         if (memberOpt.isPresent()) {
             Member member = memberOpt.get();
-            if(encoder.matches(resetPasswordRequest.newPassword(), member.getPassword())) {
+            if (encoder.matches(newPassword, member.getPassword())) {
                 ErrorList errorList = new ErrorList("Password");
                 errorList.getErrors().add("New password cannot be the same as the old password.");
-                resetPasswordResponse.getErrorLists().add(errorList);
+                errorLists.add(errorList);
             } else {
-                hashPassword(resetPasswordResponse, member, resetPasswordRequest.newPassword());
+                hashPassword(encoder, errorLists, member, newPassword);
                 logger.info("Password reset for: {}", member.getEmail());
                 this.memberRepository.updatePasswordByToken(token, member.getPassword());
-                resetPasswordResponse.setSuccess(true);
             }
 
         } else {
             ErrorList errorList = new ErrorList("Token");
             errorList.getErrors().add("Invalid token.");
-            resetPasswordResponse.getErrorLists().add(errorList);
+            errorLists.add(errorList);
         }
-
-        return ResponseEntity.ok(resetPasswordResponse);
     }
 
     public ResponseEntity<Boolean> verifyToken(String authHeader) {
         return getToken(authHeader).map(token ->
                         findMemberByToken(token).map(member -> ResponseEntity.ok(true))
                                 .orElseGet(() -> ResponseEntity.ok(false)))
+                .orElseGet(() -> ResponseEntity.ok(false));
+    }
+
+    public ResponseEntity<Boolean> checkOldPassword(String newPassword, String authHeader) {
+        return getToken(authHeader)
+                .map(token -> findMemberByToken(token)
+                        .map(member -> {
+                            if (encoder.matches(newPassword, member.getPassword())) {
+                                System.out.println("New password matches old password.");
+                                return ResponseEntity.ok(true);
+                            } else {
+                                System.out.println("New password does not match old password.");
+                                return ResponseEntity.ok(false);
+                            }
+                        })
+                        .orElseGet(() -> ResponseEntity.ok(false)))
                 .orElseGet(() -> ResponseEntity.ok(false));
     }
 }

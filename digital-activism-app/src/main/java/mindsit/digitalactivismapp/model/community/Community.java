@@ -24,11 +24,14 @@ public class Community implements MyEntity {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "logo_name", nullable = false)
-    private String logo_name;
+    @Column(name = "logo_name")
+    private String logoName;
 
-    @Column(name = "banner_name", nullable = false)
+    @Column(name = "banner_name")
     private String bannerName;
+
+    @Column(name = "owner_id", nullable = false)
+    private Long ownerId;
 
     @Column(name = "timestamp")
     @Temporal(TemporalType.TIMESTAMP)

@@ -21,7 +21,9 @@ public class ErrorLists {
     }
 
     public void add(ErrorList errorList) {
-        this.errorList.add(errorList);
+        if(findErrorListByName(errorList.getName()) == null) {
+            this.errorList.add(errorList);
+        }
     }
 
     public boolean hasNoErrors() {

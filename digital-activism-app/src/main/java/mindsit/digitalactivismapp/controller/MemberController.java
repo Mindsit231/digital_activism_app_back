@@ -4,6 +4,7 @@ import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.Tag;
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
+import mindsit.digitalactivismapp.modelDTO.member.UpdateRequest;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateResponse;
 import mindsit.digitalactivismapp.service.member.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,6 @@ public class MemberController extends EntityController<Member, MemberService> {
 
     @PostMapping("/authenticated/member/update-pfp-name-by-email")
     public ResponseEntity<Integer> updatePfpImgPathByEmail(
-            @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
             @RequestBody PfpNameByEmail pfpNameByEmail) {
         return ResponseEntity.ok(entityService.updatePfpNameByEmail(pfpNameByEmail));
     }
@@ -40,8 +40,8 @@ public class MemberController extends EntityController<Member, MemberService> {
     @PostMapping("/authenticated/member/update")
     public ResponseEntity<UpdateResponse> update(
             @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-            @RequestBody Member member) {
-        return entityService.update(member, authHeader);
+            @RequestBody UpdateRequest updateRequest) {
+        return entityService.update(updateRequest, authHeader);
     }
 
     @PostMapping("/authenticated/member/upload-files")

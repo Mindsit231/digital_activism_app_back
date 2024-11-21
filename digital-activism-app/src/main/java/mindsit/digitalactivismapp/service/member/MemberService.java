@@ -6,6 +6,7 @@ import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.MemberTag;
 import mindsit.digitalactivismapp.model.tag.Tag;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
+import mindsit.digitalactivismapp.modelDTO.member.UpdateRequest;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateResponse;
 import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.repository.tag.MemberTagRepository;
@@ -110,25 +111,22 @@ public class MemberService extends EntityService<Member, MemberRepository> {
     }
 
     @Transactional
-    public ResponseEntity<UpdateResponse> update(Member member, String authHeader) {
+    public ResponseEntity<UpdateResponse> update(UpdateRequest updateRequest, String authHeader) {
         Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
         UpdateResponse updateResponse = new UpdateResponse();
 
         if (optionalMember.isPresent()) {
-            authenticationService.checkUsername(updateResponse.getErrorLists(), member);
-            authenticationService.checkEmail(updateResponse.getErrorLists(), member);
+            authenticationService.checkUsername(updateResponse.getErrorLists(), updateRequest);
+            authenticationService.checkEmail(updateResponse.getErrorLists(), updateRequest);
+            authenticationService.resetPasswordSub(updateResponse.getErrorLists(), updateRequest.getPassword(), authHeader);
 
-            if(member.getUsername() != null && !member.getUsername().isEmpty() && !updateResponse.getErrorLists().findErrorListByName(USERNAME_ERROR_LIST).hasErrors()) {
-                logger.info("Username updated from '{}' to '{}' for memberId '{}'", optionalMember.get().getUsername(), member.getUsername(), optionalMember.get().getId());
-                optionalMember.get().setUsername(member.getUsername());
+            if(!updateResponse.getErrorLists().findErrorListByName(USERNAME_ERROR_LIST).hasErrors()) {
+                logger.info("Username updated from '{}' to '{}' for memberId '{}'", optionalMember.get().getUsername(), updateRequest.getUsername(), optionalMember.get().getId());
+                optionalMember.get().setUsername(updateRequest.getUsername());
             }
-            if(member.getEmail() != null && !member.getEmail().isEmpty() && !updateResponse.getErrorLists().findErrorListByName(EMAIL_ERROR_LIST).hasErrors()) {
-                logger.info("Email updated from '{}' to '{}' for memberId '{}'", optionalMember.get().getEmail(), member.getEmail(), optionalMember.get().getId());
-                optionalMember.get().setEmail(member.getEmail());
-            }
-
-            if (member.getPassword() != null && !member.getPassword().isEmpty()) {
-                authenticationService.resetPasswordSub(updateResponse.getErrorLists(), member.getPassword(), authHeader);
+            if(!updateResponse.getErrorLists().findErrorListByName(EMAIL_ERROR_LIST).hasErrors()) {
+                logger.info("Email updated from '{}' to '{}' for memberId '{}'", optionalMember.get().getEmail(), updateRequest.getEmail(), optionalMember.get().getId());
+                optionalMember.get().setEmail(updateRequest.getEmail());
             }
 
             if(updateResponse.getErrorLists().hasNoErrors()) {

@@ -7,7 +7,6 @@ import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorLists;
-import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorListsImpl;
 import mindsit.digitalactivismapp.modelDTO.authentication.login.LoginRequest;
 import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.PasswordRecoveryContainer;
 import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.RecoverPasswordRequest;
@@ -35,7 +34,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static mindsit.digitalactivismapp.config.SecurityConfig.PASSWORD_ROUNDS;
@@ -49,6 +47,7 @@ public class AuthenticationService {
     public final static String USERNAME_ERROR_LIST = "Username";
     public final static String EMAIL_ERROR_LIST = "Email";
     public final static String PASSWORD_ERROR_LIST = "Password";
+    public final static String TOKEN_ERROR_LIST = "Token";
 
     private final static int MIN_PASSWORD_LENGTH = 12;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
@@ -81,6 +80,19 @@ public class AuthenticationService {
     private static ResponseEntity<MemberDTO> getUnauthorizedResponse(LoginRequest loginRequest) {
         logger.info("Failed login attempt for: {}", loginRequest.email());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    public static void hashPassword(BCryptPasswordEncoder encoder, ErrorLists errorLists, Member member, String newPassword) {
+        ErrorList passwordErrorList = new ErrorList(PASSWORD_ERROR_LIST);
+        errorLists.add(passwordErrorList);
+
+        if (newPassword.matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{" + MIN_PASSWORD_LENGTH + ",}$")) {
+            member.setPassword(encoder.encode(newPassword));
+        } else {
+            passwordErrorList.getErrors().add("Password cannot be empty, must contain at least " +
+                    MIN_PASSWORD_LENGTH +
+                    " characters, 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.");
+        }
     }
 
     public Optional<Member> findMemberByToken(String token) {
@@ -145,48 +157,45 @@ public class AuthenticationService {
     }
 
     public void checkEmail(ErrorLists errorLists, Member member) {
-        ErrorList errorList = new ErrorList(EMAIL_ERROR_LIST);
-        errorLists.add(errorList);
+        ErrorList emailErrorList = new ErrorList(EMAIL_ERROR_LIST);
+        errorLists.add(emailErrorList);
+
+        if (member.getEmail() == null || member.getEmail().isEmpty()) {
+            emailErrorList.getErrors().add("Email cannot be empty.");
+            return;
+        }
 
         if (member.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
             member.setEmail(member.getEmail().toLowerCase());
         } else {
-            errorList.getErrors().add("Invalid email.");
+            emailErrorList.getErrors().add("Invalid email.");
             return;
         }
 
         if (findMemberByEmail(member.getEmail()) != null) {
-            errorList.getErrors().add("Email already in use.");
+            emailErrorList.getErrors().add("Email already in use.");
         }
     }
 
     public void checkUsername(ErrorLists errorLists, Member member) {
-        ErrorList errorList = new ErrorList(USERNAME_ERROR_LIST);
-        errorLists.add(errorList);
+        ErrorList usernameErrorList = new ErrorList(USERNAME_ERROR_LIST);
+        errorLists.add(usernameErrorList);
+
+        if(member.getUsername() == null || member.getUsername().isEmpty()) {
+            usernameErrorList.getErrors().add("Username cannot be empty.");
+            return;
+        }
 
         if (member.getUsername().matches("^[a-zA-Z0-9]*$")) {
             member.setUsername(member.getUsername().toLowerCase());
         } else {
-            errorList.getErrors().add("Username must contain only letters and numbers.");
+            usernameErrorList.getErrors().add("Username must contain only letters and numbers.");
             return;
         }
 
 
         if (member.getUsername().length() < 3) {
-            errorList.getErrors().add("Username must be at least 3 characters long.");
-        }
-    }
-
-    public static void hashPassword(BCryptPasswordEncoder encoder, ErrorLists errorLists, Member member, String newPassword) {
-        ErrorList errorList = new ErrorList(PASSWORD_ERROR_LIST);
-        errorLists.add(errorList);
-
-        if (newPassword.matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{" + MIN_PASSWORD_LENGTH + ",}$")) {
-            member.setPassword(encoder.encode(newPassword));
-        } else {
-            errorList.getErrors().add("Password cannot be empty, must contain at least " +
-                    MIN_PASSWORD_LENGTH +
-                    " characters, 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.");
+            usernameErrorList.getErrors().add("Username must be at least 3 characters long.");
         }
     }
 
@@ -276,7 +285,7 @@ public class AuthenticationService {
     public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest resetPasswordRequest, String authHeader) {
         ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse();
         resetPasswordSub(resetPasswordResponse.getErrorLists(), resetPasswordRequest.newPassword(), authHeader);
-        if(resetPasswordResponse.getErrorLists().hasNoErrors()) {
+        if (resetPasswordResponse.getErrorLists().hasNoErrors()) {
             resetPasswordResponse.setSuccess(true);
         }
 
@@ -285,25 +294,32 @@ public class AuthenticationService {
 
     @Transactional
     public void resetPasswordSub(ErrorLists errorLists, String newPassword, String authHeader) {
-        String token = getToken(authHeader).orElse("");
-        Optional<Member> memberOpt = findMemberByToken(token);
+        ErrorList passwordErrorList = new ErrorList(PASSWORD_ERROR_LIST);
+        ErrorList tokenErrorList = new ErrorList(TOKEN_ERROR_LIST);
 
-        if (memberOpt.isPresent()) {
-            Member member = memberOpt.get();
-            if (encoder.matches(newPassword, member.getPassword())) {
-                ErrorList errorList = new ErrorList("Password");
-                errorList.getErrors().add("New password cannot be the same as the old password.");
-                errorLists.add(errorList);
+        errorLists.add(tokenErrorList);
+        errorLists.add(passwordErrorList);
+
+
+        if (newPassword != null && !newPassword.isEmpty()) {
+            String token = getToken(authHeader).orElse("");
+            Optional<Member> memberOpt = findMemberByToken(token);
+
+            if (memberOpt.isPresent()) {
+                Member member = memberOpt.get();
+                if (encoder.matches(newPassword, member.getPassword())) {
+                    passwordErrorList.getErrors().add("New password cannot be the same as the old password.");
+                } else {
+                    hashPassword(encoder, errorLists, member, newPassword);
+                    logger.info("Password reset for: {}", member.getEmail());
+                    this.memberRepository.updatePasswordByToken(token, member.getPassword());
+                }
+
             } else {
-                hashPassword(encoder, errorLists, member, newPassword);
-                logger.info("Password reset for: {}", member.getEmail());
-                this.memberRepository.updatePasswordByToken(token, member.getPassword());
+                tokenErrorList.getErrors().add("Invalid token.");
             }
-
         } else {
-            ErrorList errorList = new ErrorList("Token");
-            errorList.getErrors().add("Invalid token.");
-            errorLists.add(errorList);
+            passwordErrorList.getErrors().add("New password cannot be empty.");
         }
     }
 

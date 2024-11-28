@@ -1,7 +1,7 @@
 package mindsit.digitalactivismapp.mapper.member;
 
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.modelDTO.authentication.regsiter.RegisterRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.register.RegisterRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;

@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.modelDTO.authentication.regsiter;
+package mindsit.digitalactivismapp.modelDTO.authentication.register;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

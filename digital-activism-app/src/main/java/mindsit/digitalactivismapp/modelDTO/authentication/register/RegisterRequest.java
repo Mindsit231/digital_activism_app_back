@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.modelDTO.authentication.regsiter;
+package mindsit.digitalactivismapp.modelDTO.authentication.register;
 
 public record RegisterRequest(
         String username,

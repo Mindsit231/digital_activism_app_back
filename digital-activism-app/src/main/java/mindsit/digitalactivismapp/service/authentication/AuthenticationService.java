@@ -13,8 +13,8 @@ import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.Recov
 import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.RecoverPasswordResponse;
 import mindsit.digitalactivismapp.modelDTO.authentication.passwordReset.ResetPasswordRequest;
 import mindsit.digitalactivismapp.modelDTO.authentication.passwordReset.ResetPasswordResponse;
-import mindsit.digitalactivismapp.modelDTO.authentication.regsiter.RegisterRequest;
-import mindsit.digitalactivismapp.modelDTO.authentication.regsiter.RegisterResponse;
+import mindsit.digitalactivismapp.modelDTO.authentication.register.RegisterRequest;
+import mindsit.digitalactivismapp.modelDTO.authentication.register.RegisterResponse;
 import mindsit.digitalactivismapp.modelDTO.authentication.verifyEmail.*;
 import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.service.JWTService;

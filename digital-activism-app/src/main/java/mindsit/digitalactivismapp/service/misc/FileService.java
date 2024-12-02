@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +54,15 @@ public class FileService {
             System.out.println(fileName + " was not found");
         }
         return new UrlResource(filePath.toUri());
+    }
+
+    public byte[] getResource(String fileName, String directory) {
+        try {
+            String filePath = DIRECTORY + directory + "/" + fileName;
+            return Files.readAllBytes(Paths.get(filePath));
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     public boolean deleteFile(String fileName, String directory) throws IOException {

@@ -6,7 +6,10 @@ public record CommunityDTO(
         String name,
         String description,
         String logoName,
+        byte[] logo,
         String bannerName,
-        Date timestamp
+        byte[] banner,
+        Date timestamp,
+        boolean isMember
 ) {
 }

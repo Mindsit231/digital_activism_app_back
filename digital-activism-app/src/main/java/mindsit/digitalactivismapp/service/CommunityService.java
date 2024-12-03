@@ -70,4 +70,13 @@ public class CommunityService extends EntityService<Community, CommunityReposito
             return true;
         }).orElse(false);
     }
+
+    public CommunityDTO findCommunityDtoById(Long communityId, String authHeader) {
+        return getToken(authHeader).map(memberRepository::findByToken)
+                .map(member -> entityRepository.findById(communityId)
+                        .map(community -> communityMapper.communityToCommunityDTO(community, member))
+                        .orElse(null))
+                .orElse(null);
+
+    }
 }

@@ -1,7 +1,6 @@
 package mindsit.digitalactivismapp.mapper;
 
 import mindsit.digitalactivismapp.model.community.Community;
-import mindsit.digitalactivismapp.model.community.MemberCommunity;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.modelDTO.CommunityDTO;
 import mindsit.digitalactivismapp.repository.community.MemberCommunityRepository;

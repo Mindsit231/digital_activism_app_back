@@ -43,4 +43,8 @@ public abstract class EntityController<T extends MyEntity, S extends EntityServi
         return ResponseEntity.ok(fileService.deleteFile(fileName, entityClass.getSimpleName().toLowerCase()));
     }
 
+    public ResponseEntity<T> findById(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(entityService.findById(id).orElse(null));
+    }
+
 }

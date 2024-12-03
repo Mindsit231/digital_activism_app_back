@@ -3,6 +3,8 @@ package mindsit.digitalactivismapp.service;
 import mindsit.digitalactivismapp.model.MyEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public abstract class EntityService<T extends MyEntity, R extends JpaRepository<T, Long>> {
     protected final R entityRepository;
 
@@ -15,4 +17,8 @@ public abstract class EntityService<T extends MyEntity, R extends JpaRepository<
     }
 
     public abstract Integer deleteEntityById(Long id);
+
+    public Optional<T> findById(Long id) {
+        return entityRepository.findById(id);
+    }
 }

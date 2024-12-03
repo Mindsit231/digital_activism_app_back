@@ -26,16 +26,12 @@ public abstract class EntityController<T extends MyEntity, S extends EntityServi
         this.entityClass = entityClass;
     }
 
-    public ResponseEntity<List<String>> uploadFiles(
-            @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-            @RequestParam("files") List<MultipartFile> multipartFiles)
+    public ResponseEntity<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> multipartFiles)
             throws IOException {
         return ResponseEntity.ok(fileService.uploadFiles(multipartFiles, entityClass.getSimpleName().toLowerCase()));
     }
 
-    public ResponseEntity<Resource> downloadFile(
-            @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-            @PathVariable("fileName") String fileName) throws IOException {
+    public ResponseEntity<Resource> downloadFile(@PathVariable("fileName") String fileName) throws IOException {
         Resource resource = fileService.downloadFile(fileName, entityClass.getSimpleName().toLowerCase());
         Path filePath = fileService.getFilePath(fileName, entityClass.getSimpleName().toLowerCase());
         return ResponseEntity.ok()
@@ -43,9 +39,7 @@ public abstract class EntityController<T extends MyEntity, S extends EntityServi
                 .headers(fileService.getFileHeaders(fileName)).body(resource);
     }
 
-    public ResponseEntity<Boolean> deleteFile(
-            @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-            @PathVariable("fileName") String fileName) throws IOException {
+    public ResponseEntity<Boolean> deleteFile(@PathVariable("fileName") String fileName) throws IOException {
         return ResponseEntity.ok(fileService.deleteFile(fileName, entityClass.getSimpleName().toLowerCase()));
     }
 

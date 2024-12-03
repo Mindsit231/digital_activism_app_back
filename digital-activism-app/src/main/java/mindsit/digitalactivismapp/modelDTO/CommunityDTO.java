@@ -3,6 +3,7 @@ package mindsit.digitalactivismapp.modelDTO;
 import java.util.Date;
 
 public record CommunityDTO(
+        Long id,
         String name,
         String description,
         String logoName,
@@ -10,6 +11,6 @@ public record CommunityDTO(
         String bannerName,
         byte[] banner,
         Date timestamp,
-        boolean isMember
+        boolean joined
 ) {
 }

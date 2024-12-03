@@ -2,8 +2,10 @@ package mindsit.digitalactivismapp.model.member;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import mindsit.digitalactivismapp.config.Role;
 import mindsit.digitalactivismapp.model.MyEntity;
 import mindsit.digitalactivismapp.model.tag.MemberTag;
@@ -14,8 +16,10 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "member")
+@ToString
 public class Member implements MyEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

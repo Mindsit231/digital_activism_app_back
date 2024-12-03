@@ -1,8 +1,7 @@
 package mindsit.digitalactivismapp.service.authentication;
 
 import jakarta.mail.MessagingException;
-import mindsit.digitalactivismapp.mapper.member.MemberDTOMapper;
-import mindsit.digitalactivismapp.mapper.member.RegisterMapper;
+import mindsit.digitalactivismapp.mapper.MemberMapper;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.modelDTO.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
@@ -34,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Optional;
 
 import static mindsit.digitalactivismapp.config.SecurityConfig.PASSWORD_ROUNDS;
@@ -56,8 +56,7 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final JWTService jwtService;
     private final ApplicationContext context;
-    private final MemberDTOMapper memberDTOMapper;
-    private final RegisterMapper registerMapper;
+    private final MemberMapper memberMapper;
     private final TempDataService tempDataService;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(PASSWORD_ROUNDS);
 
@@ -65,15 +64,14 @@ public class AuthenticationService {
     public AuthenticationService(MemberRepository memberRepository,
                                  AuthenticationManager authManager, EmailService emailService,
                                  JWTService jwtService,
-                                 ApplicationContext context, MemberDTOMapper memberDTOMapper,
-                                 RegisterMapper registerMapper, TempDataService tempDataService) {
+                                 ApplicationContext context,
+                                 MemberMapper memberMapper, TempDataService tempDataService) {
         this.memberRepository = memberRepository;
         this.authManager = authManager;
         this.emailService = emailService;
         this.jwtService = jwtService;
         this.context = context;
-        this.memberDTOMapper = memberDTOMapper;
-        this.registerMapper = registerMapper;
+        this.memberMapper = memberMapper;
         this.tempDataService = tempDataService;
     }
 
@@ -121,7 +119,7 @@ public class AuthenticationService {
 //            }
                 logger.info("User {} logged in.", loginRequest.email());
                 updateMemberToken(foundMember);
-                return ResponseEntity.ok(memberDTOMapper.apply(foundMember));
+                return ResponseEntity.ok(memberMapper.memberToMemberDTO(foundMember));
             } else {
                 return getUnauthorizedResponse(loginRequest);
             }
@@ -133,7 +131,7 @@ public class AuthenticationService {
 
     @Transactional
     public RegisterResponse register(RegisterRequest registerRequest) {
-        Member member = registerMapper.apply(registerRequest);
+        Member member = memberMapper.memberToRegisterMapper(registerRequest);
         RegisterResponse registerResponse = new RegisterResponse();
 
         checkEmail(registerResponse.getErrorLists(), member);
@@ -181,7 +179,7 @@ public class AuthenticationService {
         ErrorList usernameErrorList = new ErrorList(USERNAME_ERROR_LIST);
         errorLists.add(usernameErrorList);
 
-        if(member.getUsername() == null || member.getUsername().isEmpty()) {
+        if (member.getUsername() == null || member.getUsername().isEmpty()) {
             usernameErrorList.getErrors().add("Username cannot be empty.");
             return;
         }
@@ -202,7 +200,7 @@ public class AuthenticationService {
     @Transactional
     public ResponseEntity<MemberDTO> loginByToken(String authHeader) {
         return getToken(authHeader).map(token ->
-                        findMemberByToken(token).map(member -> ResponseEntity.ok(memberDTOMapper.apply(member)))
+                        findMemberByToken(token).map(member -> ResponseEntity.ok(memberMapper.memberToMemberDTO(member)))
                                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }

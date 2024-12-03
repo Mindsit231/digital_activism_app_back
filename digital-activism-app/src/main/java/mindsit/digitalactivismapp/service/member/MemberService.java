@@ -1,6 +1,6 @@
 package mindsit.digitalactivismapp.service.member;
 
-import mindsit.digitalactivismapp.mapper.member.MemberDTOMapper;
+import mindsit.digitalactivismapp.mapper.MemberMapper;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.MemberTag;
@@ -32,21 +32,21 @@ import static mindsit.digitalactivismapp.service.authentication.AuthenticationSe
 public class MemberService extends EntityService<Member, MemberRepository> {
 
     public final static String MEMBER_ERROR_LIST = "Member";
-
+    private static final Logger logger = LoggerFactory.getLogger(MemberService.class);
     private final TagRepository tagRepository;
     private final MemberTagRepository memberTagRepository;
-    private final MemberDTOMapper memberDTOMapper;
+    private final MemberMapper memberMapper;
     private final AuthenticationService authenticationService;
-    private static final Logger logger = LoggerFactory.getLogger(MemberService.class);
 
     @Autowired
     public MemberService(MemberRepository memberRepository,
                          TagRepository tagRepository,
-                         MemberTagRepository memberTagRepository, MemberDTOMapper memberDTOMapper, AuthenticationService authenticationService) {
+                         MemberTagRepository memberTagRepository,
+                         MemberMapper memberMapper, AuthenticationService authenticationService) {
         super(memberRepository);
         this.tagRepository = tagRepository;
         this.memberTagRepository = memberTagRepository;
-        this.memberDTOMapper = memberDTOMapper;
+        this.memberMapper = memberMapper;
         this.authenticationService = authenticationService;
     }
 
@@ -120,21 +120,21 @@ public class MemberService extends EntityService<Member, MemberRepository> {
             authenticationService.checkEmail(updateResponse.getErrorLists(), updateRequest);
             authenticationService.resetPasswordSub(updateResponse.getErrorLists(), updateRequest.getPassword(), authHeader);
 
-            if(!updateResponse.getErrorLists().findErrorListByName(USERNAME_ERROR_LIST).hasErrors()) {
+            if (!updateResponse.getErrorLists().findErrorListByName(USERNAME_ERROR_LIST).hasErrors()) {
                 logger.info("Username updated from '{}' to '{}' for memberId '{}'", optionalMember.get().getUsername(), updateRequest.getUsername(), optionalMember.get().getId());
                 optionalMember.get().setUsername(updateRequest.getUsername());
             }
-            if(!updateResponse.getErrorLists().findErrorListByName(EMAIL_ERROR_LIST).hasErrors()) {
+            if (!updateResponse.getErrorLists().findErrorListByName(EMAIL_ERROR_LIST).hasErrors()) {
                 logger.info("Email updated from '{}' to '{}' for memberId '{}'", optionalMember.get().getEmail(), updateRequest.getEmail(), optionalMember.get().getId());
                 optionalMember.get().setEmail(updateRequest.getEmail());
             }
 
-            if(updateResponse.getErrorLists().hasNoErrors()) {
+            if (updateResponse.getErrorLists().hasNoErrors()) {
                 updateEntity(optionalMember.get());
-                updateResponse.setMemberDTO(memberDTOMapper.apply(optionalMember.get()));
+                updateResponse.setMemberDTO(memberMapper.memberToMemberDTO(optionalMember.get()));
             }
 
-        }  else {
+        } else {
             ErrorList errorList = new ErrorList(MEMBER_ERROR_LIST);
             errorList.getErrors().add("Member not found");
             updateResponse.getErrorLists().getErrorList().add(errorList);

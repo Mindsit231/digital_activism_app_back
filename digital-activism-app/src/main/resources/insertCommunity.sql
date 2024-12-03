@@ -1,7 +1,11 @@
+DELETE FROM community;
+
+INSERT INTO community (name, description, banner_name, logo_name, owner_id)
+VALUES ('Test Community 0', 'This is a test 0 community', 'test-banner.png', 'test-logo.png', 1),
+       ('Test Community 1', 'This is a test 1 community', 'test-banner.png', 'test-logo.png', 1);
+
 INSERT INTO community (name, description, owner_id)
-VALUES ('Test Community 0', 'This is a test 0 community', 1),
-       ('Test Community 1', 'This is a test 1 community', 1),
-       ('Test Community 2', 'This is a test 2 community', 1),
+VALUES ('Test Community 2', 'This is a test 2 community', 1),
        ('Test Community 3', 'This is a test 3 community', 1),
        ('Test Community 4', 'This is a test 4 community', 1),
        ('Test Community 5', 'This is a test 5 community', 1),

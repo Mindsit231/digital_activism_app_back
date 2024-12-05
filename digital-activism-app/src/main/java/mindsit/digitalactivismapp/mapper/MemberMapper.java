@@ -1,7 +1,7 @@
 package mindsit.digitalactivismapp.mapper;
 
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.modelDTO.MemberDTO;
+import mindsit.digitalactivismapp.modelDTO.member.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.authentication.register.RegisterRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

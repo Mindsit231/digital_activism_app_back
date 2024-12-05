@@ -35,9 +35,8 @@ public class CommunityController extends EntityController<Community, CommunitySe
     }
 
     @GetMapping("/authenticated/community/find-community-dto-by-id")
-    public ResponseEntity<CommunityDTO> findById(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
-                                                @RequestParam Long communityId) {
-        return ResponseEntity.ok(entityService.findCommunityDtoById(communityId, authHeader));
+    public ResponseEntity<CommunityDTO> findById(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestParam Long communityId) {
+        return ResponseEntity.ok(entityService.findCommunityDTOById(communityId, authHeader));
     }
 
 }

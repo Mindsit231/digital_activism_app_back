@@ -59,9 +59,10 @@ public class CommunityService extends EntityService<Community, CommunityReposito
         }
     }
 
+    @Transactional
     public Boolean toggleJoin(Long communityId, String authHeader) {
         return getToken(authHeader).map(memberRepository::findByToken).map(member -> {
-            if(memberCommunityRepository.findByCommunityIdAndMemberId(communityId, member.getId()) != null) {
+            if (memberCommunityRepository.findByCommunityIdAndMemberId(communityId, member.getId()) != null) {
                 memberCommunityRepository.deleteByCommunityIdAndMemberId(communityId, member.getId());
             } else {
                 MemberCommunity memberCommunity = new MemberCommunity(member.getId(), communityId);
@@ -71,11 +72,10 @@ public class CommunityService extends EntityService<Community, CommunityReposito
         }).orElse(false);
     }
 
-    public CommunityDTO findCommunityDtoById(Long communityId, String authHeader) {
+    public CommunityDTO findCommunityDTOById(Long communityId, String authHeader) {
         return getToken(authHeader).map(memberRepository::findByToken)
-                .map(member -> entityRepository.findById(communityId)
-                        .map(community -> communityMapper.communityToCommunityDTO(community, member))
-                        .orElse(null))
+                .flatMap(member -> entityRepository.findById(communityId)
+                        .map(community -> communityMapper.communityToCommunityDTO(community, member)))
                 .orElse(null);
 
     }

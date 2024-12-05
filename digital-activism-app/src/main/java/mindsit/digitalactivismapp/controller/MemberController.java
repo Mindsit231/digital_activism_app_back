@@ -3,7 +3,6 @@ package mindsit.digitalactivismapp.controller;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.Tag;
-import mindsit.digitalactivismapp.modelDTO.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateRequest;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateResponse;
 import mindsit.digitalactivismapp.service.member.MemberService;
@@ -28,7 +27,7 @@ public class MemberController extends EntityController<Member, MemberService> {
     // FOR TESTING PURPOSES
     @GetMapping("/public/member/find-by-id/{id}")
     public ResponseEntity<Member> findById(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(entityService.findById(id).orElse(null));
+        return super.findById(id);
     }
 
     @PostMapping("/authenticated/member/update-pfp-name-by-email")

@@ -48,7 +48,7 @@ public class FileService {
         return fileNames;
     }
 
-    public Resource downloadFile(String fileName, String directory) throws IOException {
+    public UrlResource downloadFile(String fileName, String directory) throws IOException {
         Path filePath = get(DIRECTORY + directory).toAbsolutePath().normalize().resolve(fileName);
         if (!Files.exists(filePath)) {
             System.out.println(fileName + " was not found");

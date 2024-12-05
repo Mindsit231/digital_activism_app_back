@@ -1,6 +1,6 @@
 package mindsit.digitalactivismapp.controller;
 
-import mindsit.digitalactivismapp.modelDTO.MemberDTO;
+import mindsit.digitalactivismapp.modelDTO.member.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.authentication.login.LoginRequest;
 import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.RecoverPasswordRequest;
 import mindsit.digitalactivismapp.modelDTO.authentication.passwordRecovery.RecoverPasswordResponse;

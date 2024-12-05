@@ -3,7 +3,7 @@ package mindsit.digitalactivismapp.service.authentication;
 import jakarta.mail.MessagingException;
 import mindsit.digitalactivismapp.mapper.MemberMapper;
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.modelDTO.MemberDTO;
+import mindsit.digitalactivismapp.modelDTO.member.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorLists;
 import mindsit.digitalactivismapp.modelDTO.authentication.login.LoginRequest;
@@ -33,7 +33,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Optional;
 
 import static mindsit.digitalactivismapp.config.SecurityConfig.PASSWORD_ROUNDS;

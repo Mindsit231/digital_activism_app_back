@@ -56,15 +56,6 @@ public class FileService {
         return new UrlResource(filePath.toUri());
     }
 
-    public byte[] getResource(String fileName, String directory) {
-        try {
-            String filePath = DIRECTORY + directory + "/" + fileName;
-            return Files.readAllBytes(Paths.get(filePath));
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
     public boolean deleteFile(String fileName, String directory) throws IOException {
         try {
             Path filePath = get(DIRECTORY + directory).toAbsolutePath().normalize().resolve(fileName);

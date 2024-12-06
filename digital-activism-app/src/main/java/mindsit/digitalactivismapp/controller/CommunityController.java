@@ -4,9 +4,12 @@ import mindsit.digitalactivismapp.model.community.Community;
 import mindsit.digitalactivismapp.modelDTO.CommunityDTO;
 import mindsit.digitalactivismapp.modelDTO.FetchEntityLimited;
 import mindsit.digitalactivismapp.service.CommunityService;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 import static mindsit.digitalactivismapp.controller.AuthenticationController.AUTHORIZATION_HEADER;
@@ -38,5 +41,4 @@ public class CommunityController extends EntityController<Community, CommunitySe
     public ResponseEntity<CommunityDTO> findById(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestParam Long communityId) {
         return ResponseEntity.ok(entityService.findCommunityDTOById(communityId, authHeader));
     }
-
 }

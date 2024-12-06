@@ -31,10 +31,8 @@ public abstract class PostMapper {
         return postDTOS;
     }
 
-    @Mapping(target = "image", expression = "java(fileService.getResource(postImage.getName(), PostImage.class.getSimpleName().toLowerCase()))")
     public abstract PostImageDTO postImageToPostImageDTO(PostImage postImage);
 
-//    @Mapping(target = "video", expression = "java(fileService.getResource(postVideo.getName(), PostVideo.class.getSimpleName().toLowerCase()))")
     public abstract PostVideoDTO postVideoToPostVideoDTO(PostVideo postVideo);
 
     public List<PostImageDTO> postImageToPostImageDTO(Collection<PostImage> postImages) {

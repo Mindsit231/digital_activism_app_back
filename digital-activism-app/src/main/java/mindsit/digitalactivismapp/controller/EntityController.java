@@ -19,28 +19,10 @@ import static mindsit.digitalactivismapp.controller.AuthenticationController.AUT
 public abstract class EntityController<T extends MyEntity, S extends EntityService<T, ?>> {
     protected final S entityService;
     protected final Class<T> entityClass;
-    protected final FileService fileService = new FileService();
 
     protected EntityController(S entityService, Class<T> entityClass) {
         this.entityService = entityService;
         this.entityClass = entityClass;
-    }
-
-    public ResponseEntity<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> multipartFiles)
-            throws IOException {
-        return ResponseEntity.ok(fileService.uploadFiles(multipartFiles, entityClass.getSimpleName().toLowerCase()));
-    }
-
-    public ResponseEntity<Resource> downloadFile(@PathVariable("fileName") String fileName) throws IOException {
-        Resource resource = fileService.downloadFile(fileName, entityClass.getSimpleName().toLowerCase());
-        Path filePath = fileService.getFilePath(fileName, entityClass.getSimpleName().toLowerCase());
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(Files.probeContentType(filePath)))
-                .headers(fileService.getFileHeaders(fileName)).body(resource);
-    }
-
-    public ResponseEntity<Boolean> deleteFile(@PathVariable("fileName") String fileName) throws IOException {
-        return ResponseEntity.ok(fileService.deleteFile(fileName, entityClass.getSimpleName().toLowerCase()));
     }
 
     public ResponseEntity<T> findById(@PathVariable("id") Long id) {

@@ -43,21 +43,6 @@ public class MemberController extends EntityController<Member, MemberService> {
         return entityService.update(updateRequest, authHeader);
     }
 
-    @PostMapping("/authenticated/member/upload-files")
-    public ResponseEntity<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> multipartFiles) throws IOException {
-        return super.uploadFiles(multipartFiles);
-    }
-
-    @GetMapping("/authenticated/member/download-file/{fileName}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable("fileName") String fileName) throws IOException {
-        return super.downloadFile(fileName);
-    }
-
-    @GetMapping("/authenticated/member/delete-file/{fileName}")
-    public ResponseEntity<Boolean> deleteFile(@PathVariable("fileName") String fileName) throws IOException {
-        return super.deleteFile(fileName);
-    }
-
     @PostMapping("/authenticated/member/propose-new-tag")
     public ResponseEntity<Tag> proposeNewTag(
             @RequestHeader(AUTHORIZATION_HEADER) String authHeader,

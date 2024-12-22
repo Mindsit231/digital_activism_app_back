@@ -4,20 +4,26 @@ import mindsit.digitalactivismapp.model.community.Community;
 import mindsit.digitalactivismapp.modelDTO.CommunityDTO;
 import mindsit.digitalactivismapp.modelDTO.FetchEntityLimited;
 import mindsit.digitalactivismapp.service.CommunityService;
+import mindsit.digitalactivismapp.service.misc.FileService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 import static mindsit.digitalactivismapp.controller.AuthenticationController.AUTHORIZATION_HEADER;
 
 @RestController
 public class CommunityController extends EntityController<Community, CommunityService> {
-    public CommunityController(CommunityService service) {
+
+    private final FileService fileService;
+
+    @Autowired
+    public CommunityController(CommunityService service, FileService fileService) {
         super(service, Community.class);
+        this.fileService = fileService;
     }
 
     @GetMapping("/authenticated/community/get-table-length")
@@ -40,5 +46,20 @@ public class CommunityController extends EntityController<Community, CommunitySe
     @GetMapping("/authenticated/community/find-community-dto-by-id")
     public ResponseEntity<CommunityDTO> findById(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestParam Long communityId) {
         return ResponseEntity.ok(entityService.findCommunityDTOById(communityId, authHeader));
+    }
+
+    @PostMapping("/authenticated/community/upload-files")
+    public ResponseEntity<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> multipartFiles) {
+        return fileService.uploadFiles(multipartFiles, entityClass.getSimpleName());
+    }
+
+    @GetMapping("/authenticated/community/download-file")
+    public ResponseEntity<Resource> downloadFile(@RequestParam String fileName) {
+        return fileService.downloadFile(fileName, entityClass.getSimpleName());
+    }
+
+    @GetMapping("/authenticated/community/delete-file")
+    public ResponseEntity<Boolean> deleteFile(@RequestParam String fileName) {
+        return fileService.deleteFile(fileName, entityClass.getSimpleName());
     }
 }

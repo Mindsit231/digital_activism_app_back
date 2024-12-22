@@ -30,9 +30,6 @@ public class Community implements MyEntity {
     @Column(name = "banner_name")
     private String bannerName;
 
-    @Column(name = "owner_id", nullable = false)
-    private Long ownerId;
-
     @Column(name = "timestamp")
     @Temporal(TemporalType.TIMESTAMP)
     @ColumnDefault("CURRENT_TIMESTAMP")

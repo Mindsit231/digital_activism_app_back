@@ -18,6 +18,7 @@ public abstract class CommunityMapper {
     protected MemberCommunityRepository memberCommunityRepository;
 
     @Mapping(target = "joined", expression = "java(memberCommunityRepository.findByCommunityIdAndMemberId(community.getId(), member.getId()) != null)")
+    @Mapping(target = "isAdmin", expression = "java(isAdmin(community, member))")
     @Mapping(target = "id", source = "community.id")
     public abstract CommunityDTO communityToCommunityDTO(Community community, Member member);
 
@@ -27,5 +28,11 @@ public abstract class CommunityMapper {
             communityDTOS.add(communityToCommunityDTO(community, member));
         }
         return communityDTOS;
+    }
+
+    public Boolean isAdmin(Community community, Member member) {
+        Boolean isAdmin = memberCommunityRepository.findIsAdminByCommunityIdAndMemberId(community.getId(), member.getId());
+
+        return isAdmin != null && isAdmin;
     }
 }

@@ -6,22 +6,26 @@ import mindsit.digitalactivismapp.model.tag.Tag;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateRequest;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateResponse;
 import mindsit.digitalactivismapp.service.member.MemberService;
+import mindsit.digitalactivismapp.service.misc.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 import static mindsit.digitalactivismapp.controller.AuthenticationController.AUTHORIZATION_HEADER;
 
 @RestController
 public class MemberController extends EntityController<Member, MemberService> {
+
+    private final FileService fileService;
+
     @Autowired
-    public MemberController(MemberService memberService) {
+    public MemberController(MemberService memberService, FileService fileService) {
         super(memberService, Member.class);
+        this.fileService = fileService;
     }
 
     // FOR TESTING PURPOSES
@@ -61,5 +65,20 @@ public class MemberController extends EntityController<Member, MemberService> {
             @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
             @RequestBody Tag tag) {
         return ResponseEntity.ok(entityService.deleteTagByToken(tag, authHeader));
+    }
+
+    @PostMapping("/authenticated/member/upload-files")
+    public ResponseEntity<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> multipartFiles) {
+        return fileService.uploadFiles(multipartFiles, entityClass.getSimpleName());
+    }
+
+    @GetMapping("/authenticated/member/download-file")
+    public ResponseEntity<Resource> downloadFile(@RequestParam String fileName) {
+        return fileService.downloadFile(fileName, entityClass.getSimpleName());
+    }
+
+    @GetMapping("/authenticated/member/delete-file")
+    public ResponseEntity<Boolean> deleteFile(@RequestParam String fileName) {
+        return fileService.deleteFile(fileName, entityClass.getSimpleName());
     }
 }

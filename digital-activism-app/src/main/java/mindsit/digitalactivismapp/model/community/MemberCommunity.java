@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mindsit.digitalactivismapp.model.MyEntity;
+import org.hibernate.annotations.ColumnDefault;
 
 @Getter
 @Setter
@@ -25,7 +26,11 @@ public class MemberCommunity implements MyEntity {
     @Column(name = "community_id", nullable = false)
     private Long communityId;
 
-    public MemberCommunity(Long memberId, Long communityId) {
+    @Column(name = "is_admin")
+    @ColumnDefault("false")
+    private Boolean isAdmin;
+
+    public MemberCommunity(Long communityId, Long memberId) {
         this.memberId = memberId;
         this.communityId = communityId;
     }

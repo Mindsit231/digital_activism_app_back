@@ -21,8 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
 
-import static mindsit.digitalactivismapp.config.Role.ADMIN;
-import static mindsit.digitalactivismapp.config.Role.AUTHENTICATED;
+import static mindsit.digitalactivismapp.config.Role.*;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @EnableWebSecurity
@@ -59,19 +58,26 @@ public class SecurityConfig {
                 .authorizeHttpRequests(customizer -> customizer
                         .requestMatchers("public/**").permitAll()
 
-                        .requestMatchers("authenticated/**").hasAnyRole(AUTHENTICATED.name(), ADMIN.name())
+                        .requestMatchers("authenticated/**").hasAnyRole(AUTHENTICATED.name(), SITE_ADMIN.name(), COMMUNITY_ADMIN.name())
 
-                        .requestMatchers(HttpMethod.GET, "authenticated/**").hasAnyRole(AUTHENTICATED.name(), ADMIN.name())
-                        .requestMatchers(HttpMethod.POST, "authenticated/**").hasAnyRole(AUTHENTICATED.name(), ADMIN.name())
-                        .requestMatchers(HttpMethod.PUT, "authenticated/**").hasAnyRole(AUTHENTICATED.name(), ADMIN.name())
-                        .requestMatchers(HttpMethod.DELETE, "authenticated/**").hasAnyRole(AUTHENTICATED.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "authenticated/**").hasAnyRole(AUTHENTICATED.name(), SITE_ADMIN.name(), COMMUNITY_ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "authenticated/**").hasAnyRole(AUTHENTICATED.name(), SITE_ADMIN.name(), COMMUNITY_ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT, "authenticated/**").hasAnyRole(AUTHENTICATED.name(), SITE_ADMIN.name(), COMMUNITY_ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "authenticated/**").hasAnyRole(AUTHENTICATED.name(), SITE_ADMIN.name(), COMMUNITY_ADMIN.name())
 
-                        .requestMatchers("admin/**").hasRole(ADMIN.name())
+                        .requestMatchers("authenticated/community-admin/**").hasAnyRole(COMMUNITY_ADMIN.name(), SITE_ADMIN.name())
 
-                        .requestMatchers(HttpMethod.GET, "admin/**").hasRole(ADMIN.name())
-                        .requestMatchers(HttpMethod.POST, "admin/**").hasRole(ADMIN.name())
-                        .requestMatchers(HttpMethod.PUT, "admin/**").hasRole(ADMIN.name())
-                        .requestMatchers(HttpMethod.DELETE, "admin/**").hasRole(ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "authenticated/community-admin/**").hasAnyRole(COMMUNITY_ADMIN.name(), SITE_ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "authenticated/community-admin/**").hasAnyRole(COMMUNITY_ADMIN.name(), SITE_ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT, "authenticated/community-admin/**").hasAnyRole(COMMUNITY_ADMIN.name(), SITE_ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "authenticated/community-admin/**").hasAnyRole(COMMUNITY_ADMIN.name(), SITE_ADMIN.name())
+
+                        .requestMatchers("admin/**").hasRole(SITE_ADMIN.name())
+
+                        .requestMatchers(HttpMethod.GET, "admin/**").hasRole(SITE_ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "admin/**").hasRole(SITE_ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT, "admin/**").hasRole(SITE_ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "admin/**").hasRole(SITE_ADMIN.name())
 
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())

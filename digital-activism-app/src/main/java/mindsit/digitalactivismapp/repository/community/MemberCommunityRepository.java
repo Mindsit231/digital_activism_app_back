@@ -18,4 +18,7 @@ public interface MemberCommunityRepository extends JpaRepository<MemberCommunity
 
     @Query("SELECT p FROM MemberCommunity p WHERE p.communityId = :communityId AND p.memberId = :memberId")
     MemberCommunity findByCommunityIdAndMemberId(Long communityId, Long memberId);
+
+    @Query("SELECT p.isAdmin FROM MemberCommunity p WHERE p.communityId = :communityId AND p.memberId = :memberId")
+    Boolean findIsAdminByCommunityIdAndMemberId(Long communityId, Long memberId);
 }

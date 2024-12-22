@@ -3,6 +3,8 @@ package mindsit.digitalactivismapp.service.misc;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,12 +25,16 @@ import static java.nio.file.Paths.get;
 public class FileService {
     public static final String DIRECTORY = "src/main/resources/uploads/";
 
-    public List<String> uploadFiles(List<MultipartFile> multipartFiles, String directory) throws IOException {
+    public ResponseEntity<List<String>> uploadFiles(List<MultipartFile> multipartFiles, String directory) {
         List<String> fileNames = new ArrayList<>();
 
         Path path = get(DIRECTORY + directory);
         if (!Files.exists(path)) {
-            Files.createDirectories(path);
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                System.out.println("Could not create directory: " + path);
+            }
         }
 
         for (MultipartFile file : multipartFiles) {
@@ -45,24 +51,33 @@ public class FileService {
             fileNames.add(fileName);
         }
 
-        return fileNames;
+        return ResponseEntity.ok(fileNames);
     }
 
-    public UrlResource downloadFile(String fileName, String directory) throws IOException {
-        Path filePath = get(DIRECTORY + directory).toAbsolutePath().normalize().resolve(fileName);
+    public ResponseEntity<Resource> downloadFile(String fileName, String directory) {
+        Path filePath = getFilePath(fileName, directory);
         if (!Files.exists(filePath)) {
             System.out.println(fileName + " was not found");
+            return ResponseEntity.ok(null);
         }
-        return new UrlResource(filePath.toUri());
+        try {
+            Resource resource = new UrlResource(filePath.toUri());
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(Files.probeContentType(filePath)))
+                    .headers(getFileHeaders(fileName)).body(resource);
+        } catch (IOException e) {
+            System.out.println("Could not download file: " + fileName);
+            return ResponseEntity.ok(null);
+        }
     }
 
-    public boolean deleteFile(String fileName, String directory) throws IOException {
+    public ResponseEntity<Boolean> deleteFile(String fileName, String directory) {
         try {
             Path filePath = get(DIRECTORY + directory).toAbsolutePath().normalize().resolve(fileName);
             Files.delete(filePath);
-            return true;
+            return ResponseEntity.ok(true);
         } catch (IOException e) {
-            return false;
+            return ResponseEntity.ok(false);
         }
     }
 

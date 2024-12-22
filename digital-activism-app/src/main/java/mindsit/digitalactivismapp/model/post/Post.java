@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mindsit.digitalactivismapp.model.MyEntity;
-import mindsit.digitalactivismapp.model.tag.MemberTag;
+import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.tag.PostTag;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -34,29 +34,39 @@ public class Post implements MyEntity {
     @Column(name = "creation_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     @ColumnDefault("CURRENT_DATE")
-    private Date timestamp;
+    private Date creationDate;
 
     @Column(name = "community_id", nullable = false)
     private Long communityId;
+
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
+
+    @ManyToOne(
+            fetch = FetchType.EAGER,
+            targetEntity = Member.class
+    )
+    @JoinColumn(name = "member_id", updatable = false, insertable = false, nullable = false)
+    private Member member;
 
     @OneToMany(
             fetch = FetchType.EAGER,
             targetEntity = PostTag.class
     )
-    @JoinColumn(name = "post_id", updatable = false, insertable = false)
-    private List<MemberTag> postTags;
+    @JoinColumn(name = "post_id", updatable = false)
+    private List<PostTag> postTags;
 
     @OneToMany(
             fetch = FetchType.EAGER,
             targetEntity = PostImage.class
     )
-    @JoinColumn(name = "post_id", updatable = false, insertable = false)
+    @JoinColumn(name = "post_id", updatable = false)
     private List<PostImage> postImages;
 
     @OneToMany(
             fetch = FetchType.EAGER,
             targetEntity = PostVideo.class
     )
-    @JoinColumn(name = "post_id", updatable = false, insertable = false)
+    @JoinColumn(name = "post_id", updatable = false)
     private List<PostVideo> postVideos;
 }

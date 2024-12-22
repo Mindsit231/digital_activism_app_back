@@ -1,12 +1,14 @@
 package mindsit.digitalactivismapp.model.post;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mindsit.digitalactivismapp.model.MyEntity;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "post_video")
 public class PostVideo implements MyEntity {
@@ -20,4 +22,8 @@ public class PostVideo implements MyEntity {
 
     @Column(name = "post_id", nullable = false)
     private Long postId;
+
+    public PostVideo(String name) {
+        this.name = name;
+    }
 }

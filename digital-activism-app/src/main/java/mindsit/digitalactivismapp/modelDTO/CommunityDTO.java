@@ -9,6 +9,7 @@ public record CommunityDTO(
         String logoName,
         String bannerName,
         Date timestamp,
-        boolean joined
+        Boolean isAdmin,
+        Boolean joined
 ) {
 }

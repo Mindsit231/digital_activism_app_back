@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static mindsit.digitalactivismapp.config.Permission.*;
 
@@ -16,12 +15,17 @@ import static mindsit.digitalactivismapp.config.Permission.*;
 @Getter
 public enum Role {
     PUBLIC(Collections.emptySet()),
-    ADMIN(
+    SITE_ADMIN(
             Set.of(
-                    ADMIN_READ,
-                    ADMIN_WRITE,
-                    ADMIN_DELETE,
-                    ADMIN_UPDATE,
+                    SITE_ADMIN_READ,
+                    SITE_ADMIN_WRITE,
+                    SITE_ADMIN_DELETE,
+                    SITE_ADMIN_UPDATE,
+
+                    COMMUNITY_ADMIN_READ,
+                    COMMUNITY_ADMIN_WRITE,
+                    COMMUNITY_ADMIN_DELETE,
+                    COMMUNITY_ADMIN_UPDATE,
 
                     AUTHENTICATED_READ,
                     AUTHENTICATED_WRITE,
@@ -36,7 +40,20 @@ public enum Role {
                     AUTHENTICATED_DELETE,
                     AUTHENTICATED_UPDATE
             )
-    );
+    ),
+    COMMUNITY_ADMIN(
+            Set.of(
+                    COMMUNITY_ADMIN_READ,
+                    COMMUNITY_ADMIN_WRITE,
+                    COMMUNITY_ADMIN_DELETE,
+                    COMMUNITY_ADMIN_UPDATE,
+
+                    AUTHENTICATED_READ,
+                    AUTHENTICATED_WRITE,
+                    AUTHENTICATED_DELETE,
+                    AUTHENTICATED_UPDATE
+            )
+    ),;
 
 
     private final Set<Permission> permissions;

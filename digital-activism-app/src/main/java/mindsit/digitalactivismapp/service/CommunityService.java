@@ -65,7 +65,7 @@ public class CommunityService extends EntityService<Community, CommunityReposito
             if (memberCommunityRepository.findByCommunityIdAndMemberId(communityId, member.getId()) != null) {
                 memberCommunityRepository.deleteByCommunityIdAndMemberId(communityId, member.getId());
             } else {
-                MemberCommunity memberCommunity = new MemberCommunity(member.getId(), communityId);
+                MemberCommunity memberCommunity = new MemberCommunity(communityId, member.getId());
                 memberCommunityRepository.save(memberCommunity);
             }
             return true;

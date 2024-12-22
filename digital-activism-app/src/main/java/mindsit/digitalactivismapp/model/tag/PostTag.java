@@ -1,12 +1,14 @@
 package mindsit.digitalactivismapp.model.tag;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mindsit.digitalactivismapp.model.MyEntity;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "post_tag")
 public class PostTag implements MyEntity {
@@ -20,4 +22,9 @@ public class PostTag implements MyEntity {
 
     @Column(name = "tag_id", nullable = false)
     private Long tagId;
+
+    public PostTag(Long postId, Long tagId) {
+        this.postId = postId;
+        this.tagId = tagId;
+    }
 }

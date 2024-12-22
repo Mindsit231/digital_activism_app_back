@@ -12,6 +12,7 @@ import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.repository.tag.MemberTagRepository;
 import mindsit.digitalactivismapp.repository.tag.TagRepository;
 import mindsit.digitalactivismapp.service.EntityService;
+import mindsit.digitalactivismapp.service.TagService;
 import mindsit.digitalactivismapp.service.authentication.AuthenticationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,17 +35,19 @@ public class MemberService extends EntityService<Member, MemberRepository> {
     public final static String MEMBER_ERROR_LIST = "Member";
     private static final Logger logger = LoggerFactory.getLogger(MemberService.class);
     private final TagRepository tagRepository;
+    private final TagService tagService;
     private final MemberTagRepository memberTagRepository;
     private final MemberMapper memberMapper;
     private final AuthenticationService authenticationService;
 
     @Autowired
     public MemberService(MemberRepository memberRepository,
-                         TagRepository tagRepository,
+                         TagRepository tagRepository, TagService tagService,
                          MemberTagRepository memberTagRepository,
                          MemberMapper memberMapper, AuthenticationService authenticationService) {
         super(memberRepository);
         this.tagRepository = tagRepository;
+        this.tagService = tagService;
         this.memberTagRepository = memberTagRepository;
         this.memberMapper = memberMapper;
         this.authenticationService = authenticationService;
@@ -66,20 +69,11 @@ public class MemberService extends EntityService<Member, MemberRepository> {
     }
 
     public Tag proposeNewTag(String tagProposal, String authHeader) {
-        String formattedTag = tagProposal.toLowerCase();
-        Optional<Tag> existingTag = Optional.ofNullable(tagRepository.findByName(formattedTag));
-
-        if (existingTag.isEmpty()) {
-            tagRepository.save(new Tag(formattedTag));
-        }
-
-        Optional<Tag> optionalTag = Optional.ofNullable(tagRepository.findByName(formattedTag));
+        Optional<Tag> optionalTag = tagService.save(tagProposal);
 
         if (optionalTag.isPresent()) {
-            getToken(authHeader).map(entityRepository::findByToken).ifPresent(member -> {
-                memberTagRepository.save(new MemberTag(member.getId(), optionalTag.get().getId()));
-
-            });
+            getToken(authHeader).map(entityRepository::findByToken).ifPresent(member ->
+                    memberTagRepository.save(new MemberTag(member.getId(), optionalTag.get().getId())));
             return optionalTag.get();
         } else {
             return null;
@@ -88,12 +82,12 @@ public class MemberService extends EntityService<Member, MemberRepository> {
 
     public List<Tag> fetchTagsByToken(String authHeader) {
         Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
-        List<Tag> tags = new ArrayList<>();
+        List<Tag> tagList = new ArrayList<>();
         optionalMember.ifPresent(member -> member.getMemberTags().forEach(memberTag -> {
             Optional<Tag> optionalTag = tagRepository.findById(memberTag.getTagId());
-            optionalTag.ifPresent(tags::add);
+            optionalTag.ifPresent(tagList::add);
         }));
-        return tags;
+        return tagList;
     }
 
     @Transactional

@@ -1,14 +1,22 @@
 package mindsit.digitalactivismapp.service.member;
 
 import mindsit.digitalactivismapp.mapper.MemberMapper;
+import mindsit.digitalactivismapp.model.campaign.Campaign;
+import mindsit.digitalactivismapp.model.community.MemberCommunity;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.MemberTag;
 import mindsit.digitalactivismapp.model.tag.Tag;
+import mindsit.digitalactivismapp.modelDTO.FetchEntityLimited;
 import mindsit.digitalactivismapp.modelDTO.authentication.errorList.ErrorList;
+import mindsit.digitalactivismapp.modelDTO.member.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateRequest;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateResponse;
 import mindsit.digitalactivismapp.repository.MemberRepository;
+import mindsit.digitalactivismapp.repository.campaign.CampaignRepository;
+import mindsit.digitalactivismapp.repository.campaign.MemberCampaignRepository;
+import mindsit.digitalactivismapp.repository.community.CommunityRepository;
+import mindsit.digitalactivismapp.repository.community.MemberCommunityRepository;
 import mindsit.digitalactivismapp.repository.tag.MemberTagRepository;
 import mindsit.digitalactivismapp.repository.tag.TagRepository;
 import mindsit.digitalactivismapp.service.EntityService;
@@ -17,6 +25,7 @@ import mindsit.digitalactivismapp.service.authentication.AuthenticationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,17 +49,26 @@ public class MemberService extends EntityService<Member, MemberRepository> {
     private final MemberMapper memberMapper;
     private final AuthenticationService authenticationService;
 
+    private final MemberCommunityRepository memberCommunityRepository;
+    private final CommunityRepository communityRepository;
+    private final MemberCampaignRepository memberCampaignRepository;
+    private final CampaignRepository campaignRepository;
+
     @Autowired
     public MemberService(MemberRepository memberRepository,
                          TagRepository tagRepository, TagService tagService,
                          MemberTagRepository memberTagRepository,
-                         MemberMapper memberMapper, AuthenticationService authenticationService) {
+                         MemberMapper memberMapper, AuthenticationService authenticationService, MemberCommunityRepository memberCommunityRepository, CommunityRepository communityRepository, MemberCampaignRepository memberCampaignRepository, CampaignRepository campaignRepository) {
         super(memberRepository);
         this.tagRepository = tagRepository;
         this.tagService = tagService;
         this.memberTagRepository = memberTagRepository;
         this.memberMapper = memberMapper;
         this.authenticationService = authenticationService;
+        this.memberCommunityRepository = memberCommunityRepository;
+        this.communityRepository = communityRepository;
+        this.memberCampaignRepository = memberCampaignRepository;
+        this.campaignRepository = campaignRepository;
     }
 
     public Optional<Member> findById(Long id) {
@@ -135,5 +153,41 @@ public class MemberService extends EntityService<Member, MemberRepository> {
         }
 
         return ResponseEntity.ok(updateResponse);
+    }
+
+    public ResponseEntity<List<MemberDTO>> fetchMembersLimitedByCommunityId(FetchEntityLimited fetchEntityLimited, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
+        if(optionalMember.isPresent()) {
+            MemberCommunity memberCommunity = memberCommunityRepository.findByCommunityIdAndMemberId(fetchEntityLimited.optionalId(), optionalMember.get().getId());
+
+            if (memberCommunity != null && memberCommunity.getIsAdmin()) {
+                List<Member> members = entityRepository.fetchMembersLimitedByCommunityId(fetchEntityLimited.limit(), fetchEntityLimited.offset(), fetchEntityLimited.optionalId());
+                return ResponseEntity.ok(memberMapper.memberToMemberDTOShort(members));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    public ResponseEntity<List<MemberDTO>> fetchMembersLimitedByCampaignId(FetchEntityLimited fetchEntityLimited, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
+        if(optionalMember.isPresent()) {
+            Campaign campaign = campaignRepository.findById(fetchEntityLimited.optionalId()).orElse(null);
+            if(campaign == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+            MemberCommunity memberCommunity = memberCommunityRepository.findByCommunityIdAndMemberId(campaign.getCommunityId(), optionalMember.get().getId());
+
+            if (memberCommunity != null && memberCommunity.getIsAdmin()) {
+                List<Member> members = entityRepository.fetchMembersLimitedByCampaignId(fetchEntityLimited.limit(), fetchEntityLimited.offset(), fetchEntityLimited.optionalId());
+                return ResponseEntity.ok(memberMapper.memberToMemberDTOShort(members));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

@@ -31,7 +31,7 @@ public abstract class PostMapper {
     protected MemberMapper memberMapper;
 
     @Mapping(target = "id", source = "post.id")
-    @Mapping(target = "memberDTOShort", expression = "java(memberMapper.memberToMemberDTOShort(post.getMember()))")
+    @Mapping(target = "memberDTO", expression = "java(memberMapper.memberToMemberDTOShort(post.getMember()))")
     @Mapping(target = "postImageDTOS", expression = "java(postImageToPostImageDTO(post.getPostImages()))")
     @Mapping(target = "postVideoDTOS", expression = "java(postVideoToPostVideoDTO(post.getPostVideos()))")
     @Mapping(target = "tagList", expression = "java(fetchTagsByPostId(post.getId()))")
@@ -41,11 +41,7 @@ public abstract class PostMapper {
     public abstract PostDTO postToPostDTO(Post post, Member member);
 
     public List<PostDTO> postToPostDTO(Collection<Post> posts, Member member) {
-        List<PostDTO> postDTOS = new ArrayList<>();
-        for (Post post : posts) {
-            postDTOS.add(postToPostDTO(post, member));
-        }
-        return postDTOS;
+        return posts.stream().map(post -> postToPostDTO(post, member)).toList();
     }
 
     public abstract PostImageDTO postImageToPostImageDTO(PostImage postImage);

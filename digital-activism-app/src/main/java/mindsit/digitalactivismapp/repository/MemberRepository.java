@@ -32,4 +32,16 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying
     @Query("DELETE FROM Member p WHERE p.id = :id")
     Integer deleteEntityById(Long id);
+
+    @Query("SELECT m FROM Member m " +
+            "INNER JOIN MemberCommunity mc ON m.id = mc.memberId " +
+            "INNER JOIN Community c ON mc.communityId = c.id " +
+            "WHERE mc.communityId = :communityId ORDER BY c.timestamp ASC LIMIT :limit OFFSET :offset")
+    List<Member> fetchMembersLimitedByCommunityId(Integer limit, Integer offset, Long communityId);
+
+    @Query("SELECT m FROM Member m " +
+            "INNER JOIN MemberCampaign mc ON m.id = mc.memberId " +
+            "INNER JOIN Campaign c ON mc.campaignId = c.id " +
+            "WHERE mc.campaignId = :campaignId ORDER BY c.creationDate ASC LIMIT :limit OFFSET :offset")
+    List<Member> fetchMembersLimitedByCampaignId(Integer limit, Integer offset, Long campaignId);
 }

@@ -1,6 +1,7 @@
 package mindsit.digitalactivismapp.service;
 
 import mindsit.digitalactivismapp.mapper.CommunityMapper;
+import mindsit.digitalactivismapp.mapper.MemberMapper;
 import mindsit.digitalactivismapp.model.community.Community;
 import mindsit.digitalactivismapp.model.community.MemberCommunity;
 import mindsit.digitalactivismapp.model.member.Member;
@@ -25,19 +26,23 @@ public class CommunityService extends EntityService<Community, CommunityReposito
     protected final MemberRepository memberRepository;
     protected final MemberCommunityRepository memberCommunityRepository;
     protected final CommunityMapper communityMapper;
+    protected final MemberMapper memberMapper;
 
     protected final FileService fileService = new FileService();
     private final MemberService memberService;
+    private final CommunityRepository communityRepository;
 
     public CommunityService(CommunityRepository repository,
                             MemberRepository memberRepository,
                             MemberCommunityRepository memberCommunityRepository,
-                            CommunityMapper communityMapper, MemberService memberService) {
+                            CommunityMapper communityMapper, MemberMapper memberMapper, MemberService memberService, CommunityRepository communityRepository) {
         super(repository);
         this.memberRepository = memberRepository;
         this.memberCommunityRepository = memberCommunityRepository;
         this.communityMapper = communityMapper;
+        this.memberMapper = memberMapper;
         this.memberService = memberService;
+        this.communityRepository = communityRepository;
     }
 
     @Transactional
@@ -79,4 +84,5 @@ public class CommunityService extends EntityService<Community, CommunityReposito
                 .orElse(null);
 
     }
+
 }

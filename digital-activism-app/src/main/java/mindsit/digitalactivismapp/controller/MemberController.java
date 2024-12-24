@@ -3,6 +3,8 @@ package mindsit.digitalactivismapp.controller;
 import mindsit.digitalactivismapp.model.member.Member;
 import mindsit.digitalactivismapp.model.query.update.PfpNameByEmail;
 import mindsit.digitalactivismapp.model.tag.Tag;
+import mindsit.digitalactivismapp.modelDTO.FetchEntityLimited;
+import mindsit.digitalactivismapp.modelDTO.member.MemberDTO;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateRequest;
 import mindsit.digitalactivismapp.modelDTO.member.UpdateResponse;
 import mindsit.digitalactivismapp.service.member.MemberService;
@@ -65,6 +67,16 @@ public class MemberController extends EntityController<Member, MemberService> {
             @RequestHeader(AUTHORIZATION_HEADER) String authHeader,
             @RequestBody Tag tag) {
         return ResponseEntity.ok(entityService.deleteTagByToken(tag, authHeader));
+    }
+
+    @PostMapping("/authenticated/member/fetch-members-limited-by-community-id")
+    public ResponseEntity<List<MemberDTO>> fetchMembersLimitedByCommunityId(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestBody FetchEntityLimited fetchEntityLimited) {
+        return entityService.fetchMembersLimitedByCommunityId(fetchEntityLimited, authHeader);
+    }
+
+    @PostMapping("/authenticated/member/fetch-members-limited-by-campaign-id")
+    public ResponseEntity<List<MemberDTO>> fetchMembersLimitedByCampaignId(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestBody FetchEntityLimited fetchEntityLimited) {
+        return entityService.fetchMembersLimitedByCampaignId(fetchEntityLimited, authHeader);
     }
 
     @PostMapping("/authenticated/member/upload-files")

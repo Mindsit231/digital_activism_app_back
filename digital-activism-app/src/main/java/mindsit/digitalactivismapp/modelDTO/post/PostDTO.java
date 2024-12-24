@@ -2,7 +2,7 @@ package mindsit.digitalactivismapp.modelDTO.post;
 
 import mindsit.digitalactivismapp.model.post.Visibility;
 import mindsit.digitalactivismapp.model.tag.Tag;
-import mindsit.digitalactivismapp.modelDTO.member.MemberDTOShort;
+import mindsit.digitalactivismapp.modelDTO.member.MemberDTO;
 
 import java.util.Date;
 import java.util.List;
@@ -14,7 +14,7 @@ public record PostDTO(
         Visibility visibility,
         Date creationDate,
         Long communityId,
-        MemberDTOShort memberDTOShort,
+        MemberDTO memberDTO,
         List<PostImageDTO> postImageDTOS,
         List<PostVideoDTO> postVideoDTOS,
         List<Tag> tagList,

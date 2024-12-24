@@ -32,10 +32,21 @@ public class PostController extends EntityController<Post, PostService> {
         return ResponseEntity.ok(entityService.getTableLengthByCommunityId(communityId));
     }
 
-    @PostMapping("/authenticated/post/fetch-limited-by-community-id")
-    public ResponseEntity<List<PostDTO>> fetchPostDTOSLimitedByCommunityId(@RequestBody FetchEntityLimited fetchEntityLimited,
-                                                                           @RequestHeader(AUTHORIZATION_HEADER) String authHeader) {
+    @PostMapping("/authenticated/post/fetch-posts-limited-by-community-id")
+    public ResponseEntity<List<PostDTO>> fetchPostsLimitedByCommunityId(@RequestBody FetchEntityLimited fetchEntityLimited,
+                                                                        @RequestHeader(AUTHORIZATION_HEADER) String authHeader) {
         return ResponseEntity.ok(entityService.fetchPostDTOSLimitedByCommunityId(fetchEntityLimited, authHeader));
+    }
+
+    @PostMapping("/public/post/fetch-public-posts-limited")
+    public ResponseEntity<List<PostDTO>> fetchPublicPostsLimited(@RequestBody FetchEntityLimited fetchEntityLimited,
+                                                                 @RequestHeader(AUTHORIZATION_HEADER) String authHeader) {
+        return ResponseEntity.ok(entityService.fetchPublicPostDTOSLimited(fetchEntityLimited, authHeader));
+    }
+
+    @GetMapping("/public/post/fetch-public-posts-count")
+    public ResponseEntity<Long> fetchPublicPostsCount() {
+        return ResponseEntity.ok(entityService.fetchPublicPostsCount());
     }
 
     @GetMapping("/authenticated/post/toggle-like")

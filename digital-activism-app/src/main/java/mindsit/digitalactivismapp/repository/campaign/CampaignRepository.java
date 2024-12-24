@@ -17,4 +17,17 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     @Query("SELECT p FROM Campaign p WHERE p.communityId = :communityId ORDER by p.creationDate ASC LIMIT :limit OFFSET :offset")
     List<Campaign> fetchCampaignsLimitedByCommunityId(Integer limit, Integer offset, Long communityId);
+
+    @Query("SELECT c FROM Campaign c " +
+            "INNER JOIN MemberCampaign mc ON c.id = mc.campaignId " +
+            "INNER JOIN Member m ON mc.memberId = m.id " +
+            "WHERE mc.memberId = :memberId " +
+            "ORDER BY c.creationDate DESC LIMIT :limit OFFSET :offset")
+    List<Campaign> fetchCampaignsLimitedByMemberId(Integer limit, Integer offset, Long memberId);
+
+    @Query("SELECT COUNT(c) FROM Campaign c " +
+            "INNER JOIN MemberCampaign mc ON c.id = mc.campaignId " +
+            "INNER JOIN Member m ON mc.memberId = m.id " +
+            "WHERE mc.memberId = :memberId")
+    Integer fetchCampaignsCountByMemberId(Long memberId);
 }

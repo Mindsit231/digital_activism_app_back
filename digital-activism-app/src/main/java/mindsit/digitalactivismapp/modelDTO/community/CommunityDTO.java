@@ -1,4 +1,4 @@
-package mindsit.digitalactivismapp.modelDTO;
+package mindsit.digitalactivismapp.modelDTO.community;
 
 import java.util.Date;
 

@@ -112,4 +112,21 @@ public class CampaignService extends EntityService<Campaign, CampaignRepository>
                         }))
                 .orElse(null);
     }
+
+    public List<CampaignDTO> fetchCampaignsLimitedByMemberId(FetchEntityLimited fetchEntityLimited, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(memberRepository::findByToken);
+        if (optionalMember.isPresent()) {
+            return campaignMapper.campaignToCampaignDTO(
+                    entityRepository.fetchCampaignsLimitedByMemberId(fetchEntityLimited.limit(), fetchEntityLimited.offset(), optionalMember.get().getId()),
+                    optionalMember.get());
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    public Integer fetchCampaignsCountByMemberId(String authHeader) {
+        return getToken(authHeader).map(memberRepository::findByToken)
+                .map(member -> entityRepository.fetchCampaignsCountByMemberId(member.getId()))
+                .orElse(0);
+    }
 }

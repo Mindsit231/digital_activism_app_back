@@ -5,13 +5,22 @@ import mindsit.digitalactivismapp.mapper.MemberMapper;
 import mindsit.digitalactivismapp.model.community.Community;
 import mindsit.digitalactivismapp.model.community.MemberCommunity;
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.modelDTO.CommunityDTO;
+import mindsit.digitalactivismapp.model.post.Post;
+import mindsit.digitalactivismapp.model.post.PostImage;
+import mindsit.digitalactivismapp.model.post.PostVideo;
+import mindsit.digitalactivismapp.model.tag.PostTag;
+import mindsit.digitalactivismapp.model.tag.Tag;
 import mindsit.digitalactivismapp.modelDTO.FetchEntityLimited;
+import mindsit.digitalactivismapp.modelDTO.community.CommunityDTO;
+import mindsit.digitalactivismapp.modelDTO.community.CommunityRequest;
+import mindsit.digitalactivismapp.modelDTO.post.PostDTO;
 import mindsit.digitalactivismapp.repository.MemberRepository;
 import mindsit.digitalactivismapp.repository.community.CommunityRepository;
 import mindsit.digitalactivismapp.repository.community.MemberCommunityRepository;
 import mindsit.digitalactivismapp.service.member.MemberService;
 import mindsit.digitalactivismapp.service.misc.FileService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,19 +39,17 @@ public class CommunityService extends EntityService<Community, CommunityReposito
 
     protected final FileService fileService = new FileService();
     private final MemberService memberService;
-    private final CommunityRepository communityRepository;
 
     public CommunityService(CommunityRepository repository,
                             MemberRepository memberRepository,
                             MemberCommunityRepository memberCommunityRepository,
-                            CommunityMapper communityMapper, MemberMapper memberMapper, MemberService memberService, CommunityRepository communityRepository) {
+                            CommunityMapper communityMapper, MemberMapper memberMapper, MemberService memberService) {
         super(repository);
         this.memberRepository = memberRepository;
         this.memberCommunityRepository = memberCommunityRepository;
         this.communityMapper = communityMapper;
         this.memberMapper = memberMapper;
         this.memberService = memberService;
-        this.communityRepository = communityRepository;
     }
 
     @Transactional
@@ -85,4 +92,46 @@ public class CommunityService extends EntityService<Community, CommunityReposito
 
     }
 
+    public List<CommunityDTO> fetchCommunitiesLimitedByMemberId(FetchEntityLimited fetchEntityLimited, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(memberRepository::findByToken);
+        if (optionalMember.isPresent()) {
+            return communityMapper.communityToCommunityDTO(
+                    entityRepository.fetchCommunitiesLimitedByMemberId(fetchEntityLimited.limit(), fetchEntityLimited.offset(), optionalMember.get().getId()),
+                    optionalMember.get());
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    public Integer fetchCommunitiesCountByMemberId(String authHeader) {
+        return getToken(authHeader).map(memberRepository::findByToken)
+                .map(member -> entityRepository.fetchCommunitiesCountByMemberId(member.getId()))
+                .orElse(0);
+    }
+
+    public ResponseEntity<CommunityDTO> addCommunity(CommunityRequest communityRequest, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(memberRepository::findByToken);
+        if (optionalMember.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } else {
+            Member member = optionalMember.get();
+
+            Community mappedCommunity = communityMapper.communityRequestToCommunity(communityRequest);
+            Community outputCommunity = entityRepository.save(mappedCommunity);
+
+            MemberCommunity memberCommunity = new MemberCommunity(outputCommunity.getId(), member.getId());
+            memberCommunity.setIsAdmin(true);
+            memberCommunityRepository.save(memberCommunity);
+
+            Community fullOutputCommunity = entityRepository.findById(outputCommunity.getId()).orElse(null);
+
+            if (fullOutputCommunity != null) {
+                CommunityDTO communityDTO = communityMapper.communityToCommunityDTO(fullOutputCommunity, member);
+                return ResponseEntity.ok(communityDTO);
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        }
+
+    }
 }

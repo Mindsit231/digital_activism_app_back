@@ -171,6 +171,22 @@ public class MemberService extends EntityService<Member, MemberRepository> {
         }
     }
 
+    public ResponseEntity<Integer> fetchMembersCountByCommunityId(Long communityId, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
+        if(optionalMember.isPresent()) {
+            MemberCommunity memberCommunity = memberCommunityRepository.findByCommunityIdAndMemberId(communityId, optionalMember.get().getId());
+
+            if (memberCommunity != null && memberCommunity.getIsAdmin()) {
+                Integer membersCount = entityRepository.fetchMembersCountByCommunityId(communityId);
+                return ResponseEntity.ok(membersCount);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
     public ResponseEntity<List<MemberDTO>> fetchMembersLimitedByCampaignId(FetchEntityLimited fetchEntityLimited, String authHeader) {
         Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
         if(optionalMember.isPresent()) {
@@ -183,6 +199,26 @@ public class MemberService extends EntityService<Member, MemberRepository> {
             if (memberCommunity != null && memberCommunity.getIsAdmin()) {
                 List<Member> members = entityRepository.fetchMembersLimitedByCampaignId(fetchEntityLimited.limit(), fetchEntityLimited.offset(), fetchEntityLimited.optionalId());
                 return ResponseEntity.ok(memberMapper.memberToMemberDTOShort(members));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    public ResponseEntity<Integer> fetchMembersCountByCampaignId(Long campaignId, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(entityRepository::findByToken);
+        if(optionalMember.isPresent()) {
+            Campaign campaign = campaignRepository.findById(campaignId).orElse(null);
+            if(campaign == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+            MemberCommunity memberCommunity = memberCommunityRepository.findByCommunityIdAndMemberId(campaign.getCommunityId(), optionalMember.get().getId());
+
+            if (memberCommunity != null && memberCommunity.getIsAdmin()) {
+                Integer membersCount = entityRepository.fetchMembersCountByCampaignId(campaignId);
+                return ResponseEntity.ok(membersCount);
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }

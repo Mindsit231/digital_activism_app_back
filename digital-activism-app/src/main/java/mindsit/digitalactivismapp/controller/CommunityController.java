@@ -1,8 +1,9 @@
 package mindsit.digitalactivismapp.controller;
 
 import mindsit.digitalactivismapp.model.community.Community;
-import mindsit.digitalactivismapp.modelDTO.CommunityDTO;
 import mindsit.digitalactivismapp.modelDTO.FetchEntityLimited;
+import mindsit.digitalactivismapp.modelDTO.community.CommunityDTO;
+import mindsit.digitalactivismapp.modelDTO.community.CommunityRequest;
 import mindsit.digitalactivismapp.service.CommunityService;
 import mindsit.digitalactivismapp.service.misc.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,12 @@ public class CommunityController extends EntityController<Community, CommunitySe
         this.fileService = fileService;
     }
 
+    @PostMapping("/authenticated/community/add")
+    public ResponseEntity<CommunityDTO> addCommunity(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
+                                                     @RequestBody CommunityRequest communityRequest) {
+        return entityService.addCommunity(communityRequest, authHeader);
+    }
+
     @GetMapping("/authenticated/community/get-table-length")
     public ResponseEntity<Integer> getTableLength() {
         return ResponseEntity.ok(entityService.getTableLength());
@@ -37,6 +44,17 @@ public class CommunityController extends EntityController<Community, CommunitySe
         return ResponseEntity.ok(entityService.fetchCommunitiesLimited(fetchEntityLimited, authHeader));
     }
 
+    @PostMapping("/authenticated/community/fetch-communities-limited-by-member-id")
+    public ResponseEntity<List<CommunityDTO>> fetchCommunitiesLimitedByMemberId(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
+                                                                                @RequestBody FetchEntityLimited fetchEntityLimited) {
+        return ResponseEntity.ok(entityService.fetchCommunitiesLimitedByMemberId(fetchEntityLimited, authHeader));
+    }
+
+    @GetMapping("/authenticated/community/fetch-communities-count-by-member-id")
+    public ResponseEntity<Integer> fetchCommunitiesCountByMemberId(@RequestHeader(AUTHORIZATION_HEADER) String authHeader) {
+        return ResponseEntity.ok(entityService.fetchCommunitiesCountByMemberId(authHeader));
+    }
+
     @GetMapping("/authenticated/community/toggle-join")
     public ResponseEntity<Boolean> toggleJoin(@RequestHeader(AUTHORIZATION_HEADER) String authHeader,
                                               @RequestParam Long communityId) {
@@ -44,7 +62,7 @@ public class CommunityController extends EntityController<Community, CommunitySe
     }
 
     @GetMapping("/authenticated/community/find-community-dto-by-id")
-    public ResponseEntity<CommunityDTO> findById(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestParam Long communityId) {
+    public ResponseEntity<CommunityDTO> findCommunityDTOById(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestParam Long communityId) {
         return ResponseEntity.ok(entityService.findCommunityDTOById(communityId, authHeader));
     }
 

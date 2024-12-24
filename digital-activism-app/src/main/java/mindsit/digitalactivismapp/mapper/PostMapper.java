@@ -35,13 +35,27 @@ public abstract class PostMapper {
     @Mapping(target = "postImageDTOS", expression = "java(postImageToPostImageDTO(post.getPostImages()))")
     @Mapping(target = "postVideoDTOS", expression = "java(postVideoToPostVideoDTO(post.getPostVideos()))")
     @Mapping(target = "tagList", expression = "java(fetchTagsByPostId(post.getId()))")
+    @Mapping(target = "creationDate", source = "post.creationDate")
     @Mapping(target = "likesCount", expression = "java(fetchLikesCount(post.getId()))")
     @Mapping(target = "liked", expression = "java(isLiked(post.getId(), member.getId()))")
-    @Mapping(target = "creationDate", source = "post.creationDate")
     public abstract PostDTO postToPostDTO(Post post, Member member);
 
-    public List<PostDTO> postToPostDTO(Collection<Post> posts, Member member) {
+    @Mapping(target = "id", source = "post.id")
+    @Mapping(target = "memberDTO", expression = "java(memberMapper.memberToMemberDTOShort(post.getMember()))")
+    @Mapping(target = "postImageDTOS", expression = "java(postImageToPostImageDTO(post.getPostImages()))")
+    @Mapping(target = "postVideoDTOS", expression = "java(postVideoToPostVideoDTO(post.getPostVideos()))")
+    @Mapping(target = "tagList", expression = "java(fetchTagsByPostId(post.getId()))")
+    @Mapping(target = "creationDate", source = "post.creationDate")
+    @Mapping(target = "likesCount", expression = "java(fetchLikesCount(post.getId()))")
+    @Mapping(target = "liked", expression = "java(false)")
+    public abstract PostDTO postToPostDTO(Post post);
+
+    public List<PostDTO> postToPostDTO(List<Post> posts, Member member) {
         return posts.stream().map(post -> postToPostDTO(post, member)).toList();
+    }
+
+    public List<PostDTO> postToPostDTO(List<Post> posts) {
+        return posts.stream().map(this::postToPostDTO).toList();
     }
 
     public abstract PostImageDTO postImageToPostImageDTO(PostImage postImage);

@@ -3,10 +3,7 @@ package mindsit.digitalactivismapp.service.post;
 import mindsit.digitalactivismapp.mapper.PostMapper;
 import mindsit.digitalactivismapp.model.community.MemberCommunity;
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.model.post.LikedPost;
-import mindsit.digitalactivismapp.model.post.Post;
-import mindsit.digitalactivismapp.model.post.PostImage;
-import mindsit.digitalactivismapp.model.post.PostVideo;
+import mindsit.digitalactivismapp.model.post.*;
 import mindsit.digitalactivismapp.model.tag.PostTag;
 import mindsit.digitalactivismapp.model.tag.Tag;
 import mindsit.digitalactivismapp.modelDTO.FetchEntityLimited;
@@ -134,5 +131,19 @@ public class PostService extends EntityService<Post, PostRepository> {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         }
+    }
+
+    public List<PostDTO> fetchPublicPostDTOSLimited(FetchEntityLimited fetchEntityLimited, String authHeader) {
+        Optional<Member> optionalMember = getToken(authHeader).map(memberRepository::findByToken);
+        if(optionalMember.isEmpty()) {
+            return postMapper.postToPostDTO(entityRepository.fetchPostsLimitedByVisibility(fetchEntityLimited.limit(), fetchEntityLimited.offset(), Visibility.PUBLIC));
+
+        } else {
+            return postMapper.postToPostDTO(entityRepository.fetchPostsLimitedByVisibility(fetchEntityLimited.limit(), fetchEntityLimited.offset(), Visibility.PUBLIC), optionalMember.get());
+        }
+    }
+
+    public Long fetchPublicPostsCount() {
+        return entityRepository.fetchPostsCountByVisibility(Visibility.PUBLIC);
     }
 }

@@ -31,7 +31,7 @@ public class PostVideoController extends EntityController<PostVideo, PostVideoSe
         return fileService.uploadFiles(multipartFiles, entityClass.getSimpleName());
     }
 
-    @GetMapping("/authenticated/post-video/download-file")
+    @GetMapping("/public/post-video/download-file")
     public ResponseEntity<Resource> downloadFile(@RequestParam String fileName) {
         return fileService.downloadFile(fileName, entityClass.getSimpleName());
     }

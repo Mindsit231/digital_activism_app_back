@@ -74,9 +74,19 @@ public class MemberController extends EntityController<Member, MemberService> {
         return entityService.fetchMembersLimitedByCommunityId(fetchEntityLimited, authHeader);
     }
 
+    @GetMapping("/authenticated/member/fetch-members-count-by-community-id")
+    public ResponseEntity<Integer> fetchMembersCountByCommunityId(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestParam Long communityId) {
+        return entityService.fetchMembersCountByCommunityId(communityId, authHeader);
+    }
+
     @PostMapping("/authenticated/member/fetch-members-limited-by-campaign-id")
     public ResponseEntity<List<MemberDTO>> fetchMembersLimitedByCampaignId(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestBody FetchEntityLimited fetchEntityLimited) {
         return entityService.fetchMembersLimitedByCampaignId(fetchEntityLimited, authHeader);
+    }
+
+    @GetMapping("/authenticated/member/fetch-members-count-by-campaign-id")
+    public ResponseEntity<Integer> fetchMembersCountByCampaignId(@RequestHeader(AUTHORIZATION_HEADER) String authHeader, @RequestParam Long campaignId) {
+        return entityService.fetchMembersCountByCampaignId(campaignId, authHeader);
     }
 
     @PostMapping("/authenticated/member/upload-files")
@@ -84,7 +94,7 @@ public class MemberController extends EntityController<Member, MemberService> {
         return fileService.uploadFiles(multipartFiles, entityClass.getSimpleName());
     }
 
-    @GetMapping("/authenticated/member/download-file")
+    @GetMapping("/public/member/download-file")
     public ResponseEntity<Resource> downloadFile(@RequestParam String fileName) {
         return fileService.downloadFile(fileName, entityClass.getSimpleName());
     }

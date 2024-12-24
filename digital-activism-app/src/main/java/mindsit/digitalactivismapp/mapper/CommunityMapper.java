@@ -2,14 +2,13 @@ package mindsit.digitalactivismapp.mapper;
 
 import mindsit.digitalactivismapp.model.community.Community;
 import mindsit.digitalactivismapp.model.member.Member;
-import mindsit.digitalactivismapp.modelDTO.CommunityDTO;
+import mindsit.digitalactivismapp.modelDTO.community.CommunityDTO;
+import mindsit.digitalactivismapp.modelDTO.community.CommunityRequest;
 import mindsit.digitalactivismapp.repository.community.MemberCommunityRepository;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -22,9 +21,12 @@ public abstract class CommunityMapper {
     @Mapping(target = "isAdmin", expression = "java(isAdmin(community, member))")
     public abstract CommunityDTO communityToCommunityDTO(Community community, Member member);
 
-    public List<CommunityDTO> communityToCommunityDTO(Collection<Community> communities, Member member) {
+    public List<CommunityDTO> communityToCommunityDTO(List<Community> communities, Member member) {
         return communities.stream().map(community -> communityToCommunityDTO(community, member)).toList();
     }
+
+    @Mapping(target = "timestamp", expression = "java(new Date())")
+    public abstract Community communityRequestToCommunity(CommunityRequest communityRequest);
 
     public Boolean joined(Community community, Member member) {
         return memberCommunityRepository.findByCommunityIdAndMemberId(community.getId(), member.getId()) != null;

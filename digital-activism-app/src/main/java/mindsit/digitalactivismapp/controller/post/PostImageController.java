@@ -31,7 +31,7 @@ public class PostImageController extends EntityController<PostImage, PostImageSe
         return fileService.uploadFiles(multipartFiles, entityClass.getSimpleName());
     }
 
-    @GetMapping("/authenticated/post-image/download-file")
+    @GetMapping("/public/post-image/download-file")
     public ResponseEntity<Resource> downloadFile(@RequestParam String fileName) {
         return fileService.downloadFile(fileName, entityClass.getSimpleName());
     }

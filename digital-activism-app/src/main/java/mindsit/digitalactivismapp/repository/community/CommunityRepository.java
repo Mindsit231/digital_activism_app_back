@@ -15,8 +15,14 @@ public interface CommunityRepository extends JpaRepository<Community, Long> {
     @Query("SELECT COUNT(p) FROM Community p")
     Integer getTableLength();
 
-    @Query("SELECT p FROM Community p ORDER BY p.id LIMIT :limit OFFSET :offset")
+    @Query("SELECT COUNT(c) FROM Community c WHERE LOWER(c.name) LIKE %:searchValue%")
+    Integer getTableLengthBySearchValue(String searchValue);
+
+    @Query("SELECT c FROM Community c ORDER BY c.timestamp DESC LIMIT :limit OFFSET :offset")
     List<Community> fetchCommunitiesLimited(Integer limit, Integer offset);
+
+    @Query("SELECT c FROM Community c WHERE LOWER(c.name) LIKE %:searchValue% ORDER BY c.timestamp DESC LIMIT :limit OFFSET :offset")
+    List<Community> fetchCommunitiesLimitedBySearchValue(Integer limit, Integer offset, String searchValue);
 
     @Query("SELECT c FROM Community c " +
             "INNER JOIN MemberCommunity mc ON c.id = mc.communityId " +

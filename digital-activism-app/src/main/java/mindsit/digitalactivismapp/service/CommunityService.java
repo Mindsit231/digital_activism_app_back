@@ -58,14 +58,22 @@ public class CommunityService extends EntityService<Community, CommunityReposito
         return entityRepository.deleteEntityById(id);
     }
 
-    public Integer getTableLength() {
-        return entityRepository.getTableLength();
+    public Integer getTableLength(String searchValue) {
+        if(searchValue != null && !searchValue.isEmpty()) {
+            return entityRepository.getTableLengthBySearchValue(searchValue.toLowerCase());
+        } else {
+            return entityRepository.getTableLength();
+        }
     }
 
     public List<CommunityDTO> fetchCommunitiesLimited(FetchEntityLimited fetchEntityLimited, String authHeader) {
         Optional<Member> optionalMember = getToken(authHeader).map(memberRepository::findByToken);
         if (optionalMember.isPresent()) {
-            return communityMapper.communityToCommunityDTO(entityRepository.fetchCommunitiesLimited(fetchEntityLimited.limit(), fetchEntityLimited.offset()), optionalMember.get());
+            if(fetchEntityLimited.searchValue() != null && !fetchEntityLimited.searchValue().isEmpty()) {
+                return communityMapper.communityToCommunityDTO(entityRepository.fetchCommunitiesLimitedBySearchValue(fetchEntityLimited.limit(), fetchEntityLimited.offset(), fetchEntityLimited.searchValue().toLowerCase()), optionalMember.get());
+            } else {
+                return communityMapper.communityToCommunityDTO(entityRepository.fetchCommunitiesLimited(fetchEntityLimited.limit(), fetchEntityLimited.offset()), optionalMember.get());
+            }
         } else {
             return new ArrayList<>();
         }

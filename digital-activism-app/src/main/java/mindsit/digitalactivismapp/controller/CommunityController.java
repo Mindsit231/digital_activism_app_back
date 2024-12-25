@@ -34,8 +34,8 @@ public class CommunityController extends EntityController<Community, CommunitySe
     }
 
     @GetMapping("/authenticated/community/get-table-length")
-    public ResponseEntity<Integer> getTableLength() {
-        return ResponseEntity.ok(entityService.getTableLength());
+    public ResponseEntity<Integer> getTableLength(@RequestParam String searchValue) {
+        return ResponseEntity.ok(entityService.getTableLength(searchValue));
     }
 
     @PostMapping("/authenticated/community/fetch-communities-limited")
